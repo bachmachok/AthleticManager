@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}Athletic Manager{% endblock %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 text-gray-900">
+    <div class="flex h-screen">
+        <!-- Sidebar -->
+        <aside class="w-64 bg-blue-900 text-white flex flex-col p-6 space-y-4">
+            <h1 class="text-2xl font-bold mb-6">🏃 Athletic Manager</h1>
+            <nav class="flex flex-col gap-3">
+                <a href="#" class="hover:bg-blue-700 px-3 py-2 rounded">Головна</a>
+                <a href="#" class="hover:bg-blue-700 px-3 py-2 rounded">Аналітика</a>
+                <a href="#" class="hover:bg-blue-700 px-3 py-2 rounded">Завантаження</a>
+                <a href="#" class="hover:bg-blue-700 px-3 py-2 rounded">Налаштування</a>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 p-10 overflow-auto">
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+</body>
+</html>

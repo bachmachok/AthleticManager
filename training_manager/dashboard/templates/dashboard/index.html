@@ -1,10 +1,40 @@
-<!DOCTYPE html>
-<html lang="uk">
-<head>
-    <meta charset="UTF-8">
-    <title>Тренувальний Менеджер</title>
-</head>
-<body>
-    <h1>🏋️ Вітаємо у системі аналізу тренувань!</h1>
-</body>
-</html>
+{% extends "dashboard/base.html" %}
+{% load static %}
+
+{% block title %}Головна — Athletic Manager{% endblock %}
+
+{% block content %}
+    <h2 class="text-3xl font-semibold mb-8">🏋️ Вітаємо у системі аналізу тренувань!</h2>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+        <!-- Відео 1 -->
+        <div class="bg-white rounded-lg shadow-md overflow-hidden">
+            <div class="p-4">
+                <h3 class="text-xl font-semibold mb-2">Біг 100м</h3>
+                <video controls class="w-full rounded">
+                    <source src="{% static 'dashboard/videos/sprint.mp4' %}" type="video/mp4">
+                </video>
+            </div>
+        </div>
+
+        <!-- Відео 2 -->
+        <div class="bg-white rounded-lg shadow-md overflow-hidden">
+            <div class="p-4">
+                <h3 class="text-xl font-semibold mb-2">Стрибки у висоту</h3>
+                <video controls class="w-full rounded">
+                    <source src="{% static 'dashboard/videos/high_jump.mp4' %}" type="video/mp4">
+                </video>
+            </div>
+        </div>
+
+        <!-- Відео 3 -->
+        <div class="bg-white rounded-lg shadow-md overflow-hidden">
+            <div class="p-4">
+                <h3 class="text-xl font-semibold mb-2">Метання ядра</h3>
+                <video controls class="w-full rounded">
+                    <source src="{% static 'dashboard/videos/shot_put.mp4' %}" type="video/mp4">
+                </video>
+            </div>
+        </div>
+    </div>
+{% endblock %}
