@@ -1,0 +1,13 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Редагувати відео — Athletic Manager{% endblock %}
+
+{% block content %}
+<h2 class="text-2xl font-bold mb-6">Редагувати відео проби</h2>
+
+<form method="post" enctype="multipart/form-data" novalidate>
+  {% csrf_token %}
+  {{ form.as_p }}
+  <button type="submit" class="bg-green-700 text-white px-4 py-2 rounded hover:bg-green-800">Зберегти зміни</button>
+  <a href="{% url 'upload' %}" class="ml-4 text-gray-600 hover:underline">Відмінити</a>
+</form>
+{% endblock %}
