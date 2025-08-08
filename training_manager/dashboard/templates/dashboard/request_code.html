@@ -1,0 +1,46 @@
+{% extends "dashboard/base.html" %}
+
+{% block title %}
+  Вхід — Athletic Manager
+{% endblock %}
+
+{% block content %}
+  <div class="flex justify-center mt-20">
+    <div class="w-full max-w-md bg-white p-8 rounded shadow">
+      <h2 class="text-2xl font-bold mb-6 text-center">
+        Вхід до системи
+      </h2>
+      <form method="post" action="">
+        {% csrf_token %}
+        {% if next %}
+          <input type="hidden" name="next" value="{{ next }}">
+        {% endif %}
+
+        <div class="mb-4">
+          {{ form.email.label_tag }}
+          {{ form.email }}
+          {% if form.email.errors %}
+            <div class="text-red-600 text-sm mt-1">
+              {% for err in form.email.errors %}<p>{{ err }}</p>{% endfor %}
+            </div>
+          {% endif %}
+        </div>
+
+        {% if form.non_field_errors %}
+          <div class="bg-red-100 text-red-700 p-2 mb-4 rounded">
+            {% for err in form.non_field_errors %}<p>{{ err }}</p>{% endfor %}
+          </div>
+        {% endif %}
+
+        <button type="submit"
+          class="w-full bg-blue-700 text-white py-2 rounded hover:bg-blue-800">
+          Отримати код
+        </button>
+      </form>
+
+      <p class="mt-4 text-center text-sm">
+        Введіть свій email, щоб отримати код для входу.
+      </p>
+    </div>
+  </div>
+{% endblock %}

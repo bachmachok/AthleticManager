@@ -1,0 +1,26 @@
+{% extends "dashboard/base.html" %}
+
+{% block content %}
+<div class="max-w-xl mx-auto mt-10 p-6 bg-white shadow rounded">
+    <h2 class="text-xl font-bold mb-4">Налаштування</h2>
+
+    <form method="post">
+        {% csrf_token %}
+
+        <label for="language">Оберіть мову:</label>
+        <select name="language" id="language" class="ml-2 border rounded p-1">
+            {% for code, name in languages %}
+                <option value="{{ code }}" {% if code == current_language %}selected{% endif %}>{{ name }}</option>
+            {% endfor %}
+        </select>
+
+        <label for="theme" class="ml-4">Тема:</label>
+        <select name="theme" id="theme" class="ml-2 border rounded p-1">
+            <option value="light" {% if current_theme == 'light' %}selected{% endif %}>Світла</option>
+            <option value="dark" {% if current_theme == 'dark' %}selected{% endif %}>Темна</option>
+        </select>
+
+        <button type="submit" class="ml-4 bg-blue-500 text-white px-3 py-1 rounded">Зберегти</button>
+    </form>
+</div>
+{% endblock %}

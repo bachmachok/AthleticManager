@@ -1,4 +1,7 @@
+from django.contrib.auth.models import User
 from django.db import models
+from django.utils import timezone
+import datetime
 
 class AttemptCategory(models.Model):
     # Категорія: тренувальна чи змагальна спроба
@@ -37,3 +40,11 @@ class AttemptVideo(models.Model):
 
     def __str__(self):
         return f"Відео {self.event_type} - спроба {self.attempt_number} ({self.category})"
+
+class OTPCode(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    code = models.CharField(max_length=6)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def is_expired(self):
+        return timezone.now() > self.created_at + datetime.timedelta(minutes=10)

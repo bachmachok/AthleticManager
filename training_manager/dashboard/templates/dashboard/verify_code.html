@@ -1,0 +1,43 @@
+{% extends "dashboard/base.html" %}
+
+{% block title %}Підтвердження коду — Athletic Manager{% endblock %}
+
+{% block content %}
+  <div class="flex justify-center mt-20">
+    <div class="w-full max-w-md bg-white p-8 rounded shadow">
+
+      <h2 class="text-2xl font-bold mb-6 text-center">Введіть код</h2>
+
+      <form method="post" action="{% url 'verify_code' %}">
+        {% csrf_token %}
+        {% if next %}
+          <input type="hidden" name="next" value="{{ next }}">
+        {% endif %}
+
+        {% if form.non_field_errors %}
+          <div class="bg-red-100 text-red-700 p-2 mb-4 rounded">
+            {% for err in form.non_field_errors %}
+              <p>{{ err }}</p>
+            {% endfor %}
+          </div>
+        {% endif %}
+
+        <div class="mb-4">
+          <label for="{{ form.code.id_for_label }}" class="block font-medium mb-1">Код із листа</label>
+          {{ form.code }}
+          {% if form.code.errors %}
+            <div class="text-red-600 text-sm mt-1">
+              {% for err in form.code.errors %}
+                <p>{{ err }}</p>
+              {% endfor %}
+            </div>
+          {% endif %}
+        </div>
+
+        <button type="submit" class="w-full bg-blue-700 text-white py-2 rounded hover:bg-blue-800">
+          Підтвердити
+        </button>
+      </form>
+    </div>
+  </div>
+{% endblock %}

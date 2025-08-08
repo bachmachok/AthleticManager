@@ -5,7 +5,7 @@
     <title>{% block title %}Athletic Manager{% endblock %}</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-gray-100 text-gray-900">
+<body class="bg-gray-100 text-gray-900 {% if request.session.theme == 'dark' %}bg-gray-900 text-gray-100{% endif %}">
     <div class="flex h-screen">
 
         <!-- Sidebar -->
@@ -13,21 +13,25 @@
             <!-- Заголовок -->
             <h1 class="text-2xl font-bold mb-2">🏃 Athletic Manager</h1>
 
-            <!-- Блок входу / реєстрації -->
+            <!-- Блок входу / реєстрації або інфо про користувача -->
             <div class="flex items-center justify-between bg-blue-800 p-2 rounded mb-4">
                 <span class="text-xl select-none">👤</span>
                 <div class="space-x-2">
-                    <a href="{% url 'login' %}" class="bg-white text-blue-900 px-2 py-1 rounded hover:bg-gray-200">Вхід</a>
-                    <a href="{% url 'register' %}" class="bg-white text-blue-900 px-2 py-1 rounded hover:bg-gray-200">Реєстрація</a>
+                    {% if user.is_authenticated %}
+                    <span>{{ user.username }}</span>
+                        <a href="{% url 'logout' %}" class="bg-white text-blue-900 px-2 py-1 rounded hover:bg-gray-200">Вихід</a>
+                    {% else %}
+                        <a href="{% url 'login' %}" class="bg-white text-blue-900 px-2 py-1 rounded hover:bg-gray-200">Вхід</a>
+                    {% endif %}
                 </div>
             </div>
 
             <!-- Меню -->
             <nav class="flex flex-col gap-3">
-                <a href="{% url 'home' %}" class="hover:bg-blue-700 px-3 py-2 rounded">Головна</a>
+                <a href="{% url 'index' %}" class="hover:bg-blue-700 px-3 py-2 rounded">Головна</a>
                 <a href="{% url 'library' %}" class="hover:bg-blue-700 px-3 py-2 rounded">Бібліотека</a>
                 <a href="{% url 'upload' %}" class="hover:bg-blue-700 px-3 py-2 rounded">Завантаження</a>
-                <a href="#" class="hover:bg-blue-700 px-3 py-2 rounded">Налаштування</a>
+                <a href="{% url 'settings' %}" class="hover:bg-blue-700 px-3 py-2 rounded">Налаштування</a>
             </nav>
         </aside>
 
