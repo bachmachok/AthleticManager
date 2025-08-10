@@ -5,12 +5,13 @@ from django.contrib.auth import login, logout
 from django.utils.crypto import get_random_string
 from django.contrib.auth.decorators import login_required
 from django.db.models import Prefetch
-from django.core.mail import send_mail
 import logging
 from django.utils.translation import activate
 from django.http import HttpResponseRedirect
 from django.conf import settings
 from django.utils.translation import get_language
+
+from .gmail_api import send_gmail
 from .models import AttemptCategory, AttemptVideo, OTPCode
 from .forms import (
     AttemptCategoryForm,
@@ -18,6 +19,7 @@ from .forms import (
     OTPRequestForm,
     OTPVerifyForm,
 )
+
 
 logger = logging.getLogger(__name__)
 
@@ -45,13 +47,17 @@ def login_request_code(request):
             if next_url:
                 request.session['next_url'] = next_url
 
-            send_mail(
-                subject='Ваш код підтвердження',
-                message=f'Ваш код: {code}',
-                from_email='your_email@example.com',
-                recipient_list=[email],
-                fail_silently=False,
-            )
+            # відправка через Gmail API
+            try:
+                send_gmail(
+                    to_email=email,
+                    subject='Ваш код підтвердження',
+                    body=f'Ваш код: {code}',
+                )
+            except Exception as e:
+                logger.exception("Не вдалося надіслати лист: %s", e)
+                # за потреби: показати повідомлення користувачу або повторити спробу
+
             return redirect('verify_code')
     else:
         form = OTPRequestForm()
