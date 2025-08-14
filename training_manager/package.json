@@ -1,0 +1,18 @@
+{
+  "name": "athletic-manager",
+  "private": true,
+  "version": "1.0.0",
+  "description": "",
+  "main": "tailwind.config.js",
+"scripts": {
+  "tw:dev": "node ./node_modules/tailwindcss/lib/cli.js -c tailwind.config.js -i dashboard/static/src/tailwind.css -o dashboard/static/dashboard/app.css --watch",
+  "tw:build": "node ./node_modules/tailwindcss/lib/cli.js -c tailwind.config.js -i dashboard/static/src/tailwind.css -o dashboard/static/dashboard/app.css --minify"
+},
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "devDependencies": {
+    "tailwindcss": "^3.4.9"
+  }
+}

@@ -1,58 +1,148 @@
+{% load static %}
 <!DOCTYPE html>
-<html lang="uk">
+<html lang="uk" class="h-full {% if request.session.theme == 'dark' %}dark{% endif %}">
 <head>
-    <meta charset="UTF-8" />
-    <title>{% block title %}Athletic Manager{% endblock %}</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{% block title %}Athletic Manager{% endblock %}</title>
+  <link rel="stylesheet" href="{% static 'dashboard/app.css' %}">
+  {% block extra_head %}{% endblock %}
 </head>
-<body class="bg-gray-100 text-gray-900 {% if request.session.theme == 'dark' %}bg-gray-900 text-gray-100{% endif %}">
-    <div class="flex h-screen">
+<body id="app" class="h-full bg-gray-50 text-gray-900 antialiased dark:bg-gray-900 dark:text-gray-100">
 
-        <!-- Sidebar -->
-        <aside class="w-64 bg-blue-900 text-white flex flex-col p-6 space-y-4 hidden md:flex" id="sidebar">
-            <!-- Заголовок -->
-            <h1 class="text-2xl font-bold mb-2">🏃 Athletic Manager</h1>
+<!-- Overlay для мобільного off‑canvas -->
+<div id="overlay" class="fixed inset-0 z-40 hidden bg-black/40 backdrop-blur-sm md:hidden"></div>
 
-            <!-- Блок входу / реєстрації або інфо про користувача -->
-            <div class="flex items-center justify-between bg-blue-800 p-2 rounded mb-4">
-                <span class="text-xl select-none">👤</span>
-                <div class="space-x-2">
-                    {% if user.is_authenticated %}
-                    <span>{{ user.username }}</span>
-                        <a href="{% url 'logout' %}" class="bg-white text-blue-900 px-2 py-1 rounded hover:bg-gray-200">Вихід</a>
-                    {% else %}
-                        <a href="{% url 'login' %}" class="bg-white text-blue-900 px-2 py-1 rounded hover:bg-gray-200">Вхід</a>
-                    {% endif %}
-                </div>
-            </div>
+<!-- На md+ це грід [sidebar | content] -->
+<div id="layout" class="min-h-screen md:layout-grid">
 
-            <!-- Меню -->
-            <nav class="flex flex-col gap-3">
-                <a href="{% url 'index' %}" class="hover:bg-blue-700 px-3 py-2 rounded">Головна</a>
-                <a href="{% url 'library' %}" class="hover:bg-blue-700 px-3 py-2 rounded">Бібліотека</a>
-                <a href="{% url 'upload' %}" class="hover:bg-blue-700 px-3 py-2 rounded">Завантаження</a>
-                <a href="{% url 'settings' %}" class="hover:bg-blue-700 px-3 py-2 rounded">Налаштування</a>
-            </nav>
-        </aside>
+  <!-- SIDEBAR -->
+  <aside id="sidebar"
+         class="sidebar z-50 bg-gradient-to-b from-brand-800 to-brand-900 text-white
+                md:static md:translate-x-0 md:h-auto md:flex md:flex-col
+                fixed inset-y-0 left-0 -translate-x-full transition-all duration-300">
 
-        <!-- Mobile header з бургером -->
-        <div class="md:hidden bg-blue-900 text-white p-4 flex justify-between items-center w-full">
-            <h1 class="text-xl font-bold">🏃 Athletic Manager</h1>
-            <button onclick="toggleSidebar()" aria-label="Toggle menu" class="text-3xl leading-none select-none">☰</button>
-        </div>
+    <!-- Верхній бар -->
+    <div class="sb-top">
+      <div class="flex items-center gap-3">
+        <!-- Лого (у згорнутому режимі на hover показує "бургер"; клік — перемикає) -->
+        <button id="logoToggle" class="logo-toggle" aria-label="Розгорнути/згорнути">
+          <span class="ico-logo">🏃</span>
+          <span class="ico-menu">☰</span>
+        </button>
+        <span class="brand-text text-white/90 font-semibold select-none">Athletic Manager</span>
+      </div>
 
-        <!-- Основний контент -->
-        <main class="flex-1 p-10 overflow-auto">
-            {% block content %}{% endblock %}
-        </main>
-
+      <!-- Кнопка-колапс показується лише в розгорнутому стані (у згорнутому прихована CSS) -->
+      <button id="menuToggle" class="safe-tap rounded-lg bg-white/10 px-3 py-2 hover:bg-white/20 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40"
+              aria-label="Згорнути меню" aria-expanded="true">☰</button>
     </div>
 
-    <script>
-        function toggleSidebar() {
-            const sidebar = document.getElementById('sidebar');
-            sidebar.classList.toggle('hidden');
-        }
-    </script>
+    <!-- Блок користувача — при згорненні повністю зникає -->
+    <div class="user-block m-4 rounded-lg bg-white/5 p-3">
+      <div class="flex items-center gap-3">
+        <div class="h-9 w-9 shrink-0 rounded-full bg-white/20 grid place-items-center">👤</div>
+        <div class="min-w-0">
+          {% if user.is_authenticated %}
+            <div class="font-medium truncate">{{ user.username }}</div>
+            <div class="text-white/70 text-sm">Вітаю!</div>
+          {% else %}
+            <div class="font-medium">Гість</div>
+            <div class="text-white/70 text-sm">Увійдіть, щоб зберігати прогрес</div>
+          {% endif %}
+        </div>
+      </div>
+      <div class="mt-3">
+        {% if user.is_authenticated %}
+          <a href="{% url 'logout' %}" class="btn-ghost w-full justify-center bg-white/10 hover:bg-white/20">Вихід</a>
+        {% else %}
+          <a href="{% url 'login' %}" class="btn-primary w-full justify-center">Вхід</a>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Навігація -->
+    {% with current=request.resolver_match.url_name %}
+    <nav class="flex flex-col gap-1 px-2 py-2 text-sm">
+      <a href="{% url 'index' %}" class="nav-link {% if current == 'index' %}nav-link-active{% endif %}">
+        <span class="nav-icon">🏠</span>
+        <span class="nav-text">Головна</span>
+        <span class="nav-under hidden">Головна</span>
+      </a>
+      <a href="{% url 'library' %}" class="nav-link {% if current == 'library' %}nav-link-active{% endif %}">
+        <span class="nav-icon">📚</span>
+        <span class="nav-text">Бібліотека</span>
+        <span class="nav-under hidden">Бібліотека</span>
+      </a>
+      <a href="{% url 'upload' %}" class="nav-link {% if current == 'upload' %}nav-link-active{% endif %}">
+        <span class="nav-icon">⤴️</span>
+        <span class="nav-text">Завантаження</span>
+        <span class="nav-under hidden">Завантаження</span>
+      </a>
+      <a href="{% url 'settings' %}" class="nav-link {% if current == 'settings' %}nav-link-active{% endif %}">
+        <span class="nav-icon">⚙️</span>
+        <span class="nav-text">Налаштування</span>
+        <span class="nav-under hidden">Налаштування</span>
+      </a>
+    </nav>
+    {% endwith %}
+
+    <!-- НИЖНІЙ БЛОК ВИДАЛЕНО: ніяких версій і перемикача теми -->
+  </aside>
+
+  <!-- CONTENT -->
+  <main id="main" class="pt-4 md:pt-6">
+    <div class="hidden md:flex justify-end pr-4 text-xs text-gray-500 dark:text-gray-400">
+      {% if request.resolver_match.url_name %}/ {{ request.resolver_match.url_name }}{% endif %}
+    </div>
+
+    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6">
+      {% block content %}{% endblock %}
+    </div>
+  </main>
+</div>
+
+<script>
+  const app = document.getElementById('app');
+  const layout = document.getElementById('layout');
+  const sidebar = document.getElementById('sidebar');
+  const overlay = document.getElementById('overlay');
+  const menuToggle = document.getElementById('menuToggle'); // видимий лише у розгорнутому
+  const logoToggle = document.getElementById('logoToggle'); // завжди є (у колапсі працює як бургер)
+  const mqDesktop = window.matchMedia('(min-width: 768px)');
+
+  function openMobile() {
+    sidebar.classList.remove('-translate-x-full');
+    overlay.classList.remove('hidden');
+    document.documentElement.style.overflow = 'hidden';
+  }
+  function closeMobile() {
+    sidebar.classList.add('-translate-x-full');
+    overlay.classList.add('hidden');
+    document.documentElement.style.overflow = '';
+  }
+  function toggleDesktopCollapse() {
+    app.classList.toggle('has-collapsed');
+    layout.classList.toggle('layout-grid-collapsed');
+    sidebar.classList.toggle('sidebar--collapsed');
+    menuToggle?.setAttribute('aria-expanded', String(!app.classList.contains('has-collapsed')));
+  }
+
+  function toggleMenu() {
+    if (mqDesktop.matches) {
+      toggleDesktopCollapse();
+    } else {
+      const hidden = sidebar.classList.contains('-translate-x-full');
+      hidden ? openMobile() : closeMobile();
+    }
+  }
+
+  menuToggle?.addEventListener('click', toggleMenu);
+  logoToggle?.addEventListener('click', toggleMenu); // у згорнутому клік по лого розгортає
+  overlay?.addEventListener('click', closeMobile);
+  window.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeMobile(); });
+</script>
+
+{% block extra_scripts %}{% endblock %}
 </body>
 </html>

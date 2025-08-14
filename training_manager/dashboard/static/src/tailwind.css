@@ -1,0 +1,72 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ---------- Base ---------- */
+@layer base {
+  html { scroll-behavior: smooth; }
+  body { @apply bg-gray-50 text-gray-900 antialiased dark:bg-gray-900 dark:text-gray-100; }
+  h1,h2,h3 { @apply font-extrabold tracking-tight text-gray-900 dark:text-white; }
+  p { @apply text-gray-600 dark:text-gray-300; }
+  a { @apply underline-offset-2 decoration-slate-300 hover:decoration-brand-400; }
+}
+
+/* ---------- Components ---------- */
+@layer components {
+  .btn { @apply inline-flex items-center gap-2 rounded-md px-4 py-2 text-sm font-medium transition shadow focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-brand-500 dark:focus-visible:ring-offset-gray-900; }
+  .btn-primary { @apply btn bg-brand-600 text-white hover:bg-brand-700 active:bg-brand-800; }
+  .btn-ghost   { @apply btn bg-transparent hover:bg-white/60 text-gray-900 dark:hover:bg-white/10 dark:text-gray-100; }
+
+  .nav-link { @apply flex items-center gap-3 px-3 py-2 rounded-md transition hover:bg-white/10 focus-visible:bg-white/10 outline-none; }
+  .nav-link-active { @apply bg-white/15 ring-1 ring-white/20; }
+
+  .card { @apply rounded-xl border border-gray-200 bg-white p-6 shadow dark:border-gray-800 dark:bg-gray-800; }
+
+  /* Sidebar base + topbar */
+  .sidebar { @apply transition-[width] duration-300; }
+  .sb-top { @apply flex items-center justify-between p-4 border-b border-white/10; }
+
+  /* Logo/Toggle combo */
+  .logo-toggle { @apply relative inline-flex h-10 w-10 items-center justify-center rounded-lg bg-white/10 hover:bg-white/20 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40; }
+  .logo-toggle .ico-logo { @apply transition-opacity; }
+  .logo-toggle .ico-menu { @apply absolute inset-0 grid place-items-center opacity-0 transition-opacity; }
+}
+
+/* ---------- Utilities ---------- */
+@layer utilities {
+  .safe-tap { @apply min-h-[44px] min-w-[44px]; }
+
+  /* Desktop layout grid: [sidebar | content] */
+  @screen md {
+    .layout-grid { display: grid; grid-template-columns: 18rem 1fr; }
+    .layout-grid.layout-grid-collapsed { grid-template-columns: 5rem 1fr; }
+  }
+
+  /* Mobile off‑canvas width (collapse ignored) */
+  @media (max-width: 767px) {
+    .sidebar { width: 18rem; }
+    .sidebar--collapsed { width: 18rem; }
+  }
+}
+
+/* ---------- Sidebar collapsed (desktop rail) ---------- */
+@layer components {
+  .sidebar--collapsed { @apply w-20; }
+
+  /* верх центрується; назва бренду ховається; окрема кнопка меню теж ховається */
+  .sidebar--collapsed .sb-top { @apply flex-col items-center gap-2; }
+  .sidebar--collapsed .brand-text { @apply hidden; }
+  .sidebar--collapsed #menuToggle { @apply hidden; }
+
+  /* у згорнутому режимі лого → бургер при hover */
+  .sidebar--collapsed .logo-toggle:hover .ico-logo { @apply opacity-0; }
+  .sidebar--collapsed .logo-toggle:hover .ico-menu { @apply opacity-100; }
+
+  /* навігація перетворюється на іконки з підписом */
+  .sidebar--collapsed .nav-link { @apply flex flex-col items-center gap-1 px-2 py-3 text-center; }
+  .sidebar--collapsed .nav-link .nav-text { @apply hidden; }
+  .sidebar--collapsed .nav-link .nav-under { @apply block text-[10px] leading-tight opacity-90; }
+
+  /* user‑block повністю забираємо без порожнього місця */
+  .sidebar.sidebar--collapsed > .user-block { @apply m-0 p-0 h-0 overflow-hidden; }
+}
