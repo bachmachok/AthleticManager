@@ -1,43 +1,69 @@
 {% extends "dashboard/base.html" %}
-
 {% block title %}Підтвердження коду — Athletic Manager{% endblock %}
 
 {% block content %}
-  <div class="flex justify-center mt-20">
-    <div class="w-full max-w-md bg-white p-8 rounded shadow">
+  <h1 class="text-2xl md:text-3xl font-semibold tracking-tight mb-6 text-center">
+    Введіть код підтвердження
+  </h1>
 
-      <h2 class="text-2xl font-bold mb-6 text-center">Введіть код</h2>
+  <article class="card max-w-md mx-auto">
+    <form method="post" action="{% url 'verify_code' %}" novalidate class="p-0">
+      {% csrf_token %}
+      {% if next %}
+        <input type="hidden" name="next" value="{{ next }}">
+      {% endif %}
 
-      <form method="post" action="{% url 'verify_code' %}">
-        {% csrf_token %}
-        {% if next %}
-          <input type="hidden" name="next" value="{{ next }}">
-        {% endif %}
-
+      <div class="p-6 space-y-5">
         {% if form.non_field_errors %}
-          <div class="bg-red-100 text-red-700 p-2 mb-4 rounded">
+          <div class="rounded-lg bg-red-50 text-red-700 px-3 py-2 text-sm dark:bg-red-900/20 dark:text-red-300">
             {% for err in form.non_field_errors %}
-              <p>{{ err }}</p>
+              <div>{{ err }}</div>
             {% endfor %}
           </div>
         {% endif %}
 
-        <div class="mb-4">
-          <label for="{{ form.code.id_for_label }}" class="block font-medium mb-1">Код із листа</label>
-          {{ form.code }}
-          {% if form.code.errors %}
-            <div class="text-red-600 text-sm mt-1">
-              {% for err in form.code.errors %}
-                <p>{{ err }}</p>
-              {% endfor %}
-            </div>
-          {% endif %}
-        </div>
+        <div class="space-y-1.5">
+          <label for="{{ form.code.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-200">
+            Код із листа{% if form.code.field.required %}<span class="text-red-600">*</span>{% endif %}
+          </label>
 
-        <button type="submit" class="w-full bg-blue-700 text-white py-2 rounded hover:bg-blue-800">
+          <input
+            type="text"
+            name="{{ form.code.html_name }}"
+            id="{{ form.code.id_for_label }}"
+            value="{{ form.code.value|default_if_none:'' }}"
+            {% if form.code.field.required %}required{% endif %}
+            inputmode="numeric"
+            autocomplete="one-time-code"
+            placeholder="Введіть код"
+            class="w-full tracking-widest text-center rounded-lg border border-gray-300 bg-white px-3 py-3 text-base
+                   focus:outline-none focus:ring-2 focus:ring-brand-500
+                   dark:bg-gray-800 dark:border-gray-700 dark:text-gray-100" />
+
+          {% if form.code.errors %}
+            <ul class="text-xs text-red-600 dark:text-red-400 space-y-0.5">
+              {% for err in form.code.errors %}
+                <li>{{ err }}</li>
+              {% endfor %}
+            </ul>
+          {% endif %}
+
+          <p class="text-xs text-gray-500 dark:text-gray-400">
+            Перевірте пошту та введіть одноразовий код. Якщо листа немає — перевірте «Спам».
+          </p>
+        </div>
+      </div>
+
+      <div class="px-6 pb-6 space-y-3">
+        <button type="submit" class="btn btn-primary w-full justify-center">
           Підтвердити
         </button>
-      </form>
-    </div>
-  </div>
+
+        <div class="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
+          <a href="{% url 'login' %}" class="hover:underline">Надіслати код ще раз</a>
+          <a href="{% url 'login' %}" class="hover:underline">Повернутися до входу</a>
+        </div>
+      </div>
+    </form>
+  </article>
 {% endblock %}

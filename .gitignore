@@ -184,3 +184,18 @@ Thumbs.db
 # Build artifacts (залишаємо app.css в репо!)
 dashboard/static/dashboard/app.css.map
 training_manager/token.json
+
+# Secrets
+training_manager/credentials.json
+training_manager/token.json
+.env
+
+# IDE
+/.idea/
+
+# Python
+__pycache__/
+*.pyc
+
+# Node
+node_modules/

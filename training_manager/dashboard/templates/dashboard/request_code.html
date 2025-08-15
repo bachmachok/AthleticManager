@@ -1,46 +1,69 @@
 {% extends "dashboard/base.html" %}
 
-{% block title %}
-  Вхід — Athletic Manager
-{% endblock %}
+{% block title %}Вхід — Athletic Manager{% endblock %}
 
 {% block content %}
-  <div class="flex justify-center mt-20">
-    <div class="w-full max-w-md bg-white p-8 rounded shadow">
-      <h2 class="text-2xl font-bold mb-6 text-center">
-        Вхід до системи
-      </h2>
-      <form method="post" action="">
-        {% csrf_token %}
-        {% if next %}
-          <input type="hidden" name="next" value="{{ next }}">
-        {% endif %}
+  <h1 class="text-2xl md:text-3xl font-semibold tracking-tight mb-6 text-center">
+    Вхід до системи
+  </h1>
 
-        <div class="mb-4">
-          {{ form.email.label_tag }}
-          {{ form.email }}
-          {% if form.email.errors %}
-            <div class="text-red-600 text-sm mt-1">
-              {% for err in form.email.errors %}<p>{{ err }}</p>{% endfor %}
-            </div>
-          {% endif %}
-        </div>
+  <article class="card max-w-md mx-auto">
+    <form method="post" action="" novalidate class="p-0">
+      {% csrf_token %}
+      {% if next %}
+        <input type="hidden" name="next" value="{{ next }}">
+      {% endif %}
 
+      <div class="p-6 space-y-5">
+        {# Глобальні помилки #}
         {% if form.non_field_errors %}
-          <div class="bg-red-100 text-red-700 p-2 mb-4 rounded">
-            {% for err in form.non_field_errors %}<p>{{ err }}</p>{% endfor %}
+          <div class="rounded-lg bg-red-50 text-red-700 px-3 py-2 text-sm dark:bg-red-900/20 dark:text-red-300">
+            {% for err in form.non_field_errors %}
+              <div>{{ err }}</div>
+            {% endfor %}
           </div>
         {% endif %}
 
-        <button type="submit"
-          class="w-full bg-blue-700 text-white py-2 rounded hover:bg-blue-800">
+        {# Поле email #}
+        <div class="space-y-1.5">
+          <label for="{{ form.email.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-200">
+            Електронна пошта{% if form.email.field.required %}<span class="text-red-600">*</span>{% endif %}
+          </label>
+
+          <input
+            type="email"
+            name="{{ form.email.html_name }}"
+            id="{{ form.email.id_for_label }}"
+            value="{{ form.email.value|default_if_none:'' }}"
+            {% if form.email.field.required %}required{% endif %}
+            autocomplete="email"
+            placeholder="your@email.com"
+            class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm
+                   focus:outline-none focus:ring-2 focus:ring-brand-500
+                   dark:bg-gray-800 dark:border-gray-700 dark:text-gray-100" />
+
+          {% if form.email.errors %}
+            <ul class="text-xs text-red-600 dark:text-red-400 space-y-0.5">
+              {% for err in form.email.errors %}
+                <li>{{ err }}</li>
+              {% endfor %}
+            </ul>
+          {% endif %}
+
+          <p class="text-xs text-gray-500 dark:text-gray-400">
+            Введіть свій email, і ми надішлемо одноразовий код для входу.
+          </p>
+        </div>
+      </div>
+
+      <div class="px-6 pb-6 space-y-3">
+        <button type="submit" class="btn btn-primary w-full justify-center">
           Отримати код
         </button>
-      </form>
-
-      <p class="mt-4 text-center text-sm">
-        Введіть свій email, щоб отримати код для входу.
-      </p>
-    </div>
-  </div>
+        <a href="{% url 'index' %}" class="btn btn-ghost w-full justify-center">
+          Повернутися на головну
+        </a>
+      </div>
+    </form>
+  </article>
 {% endblock %}

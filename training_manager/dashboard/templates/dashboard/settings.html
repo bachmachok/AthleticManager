@@ -1,26 +1,52 @@
 {% extends "dashboard/base.html" %}
+{% block title %}Налаштування — Athletic Manager{% endblock %}
 
 {% block content %}
-<div class="max-w-xl mx-auto mt-10 p-6 bg-white shadow rounded">
-    <h2 class="text-xl font-bold mb-4">Налаштування</h2>
+  <h1 class="text-2xl md:text-3xl font-semibold tracking-tight mb-6">⚙️ Налаштування</h1>
 
-    <form method="post">
-        {% csrf_token %}
+  <article class="card max-w-2xl mx-auto">
+    <form method="post" class="card-body space-y-6" novalidate>
+      {% csrf_token %}
 
-        <label for="language">Оберіть мову:</label>
-        <select name="language" id="language" class="ml-2 border rounded p-1">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+        <!-- Мова -->
+        <div class="space-y-1.5">
+          <label for="language" class="block text-sm font-medium text-gray-700 dark:text-gray-200">
+            Оберіть мову
+          </label>
+          <select
+            name="language" id="language"
+            class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm
+                   focus:outline-none focus:ring-2 focus:ring-brand-500
+                   dark:bg-gray-800 dark:border-gray-700 dark:text-gray-100">
             {% for code, name in languages %}
-                <option value="{{ code }}" {% if code == current_language %}selected{% endif %}>{{ name }}</option>
+              <option value="{{ code }}" {% if code == current_language %}selected{% endif %}>
+                {{ name }}
+              </option>
             {% endfor %}
-        </select>
+          </select>
+        </div>
 
-        <label for="theme" class="ml-4">Тема:</label>
-        <select name="theme" id="theme" class="ml-2 border rounded p-1">
+        <!-- Тема -->
+        <div class="space-y-1.5">
+          <label for="theme" class="block text-sm font-medium text-gray-700 dark:text-gray-200">
+            Тема
+          </label>
+          <select
+            name="theme" id="theme"
+            class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm
+                   focus:outline-none focus:ring-2 focus:ring-brand-500
+                   dark:bg-gray-800 dark:border-gray-700 dark:text-gray-100">
             <option value="light" {% if current_theme == 'light' %}selected{% endif %}>Світла</option>
-            <option value="dark" {% if current_theme == 'dark' %}selected{% endif %}>Темна</option>
-        </select>
+            <option value="dark"  {% if current_theme == 'dark'  %}selected{% endif %}>Темна</option>
+          </select>
+        </div>
+      </div>
 
-        <button type="submit" class="ml-4 bg-blue-500 text-white px-3 py-1 rounded">Зберегти</button>
+      <div class="pt-2 flex items-center justify-end gap-3">
+        <a href="{% url 'index' %}" class="btn btn-ghost">Скасувати</a>
+        <button type="submit" class="btn btn-primary">Зберегти</button>
+      </div>
     </form>
-</div>
+  </article>
 {% endblock %}

@@ -1,0 +1,70 @@
+<footer class="mt-0">
+  <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+
+    <!-- Лише тонка лінія зверху як розділювач -->
+    <div class="border-t border-gray-200 dark:border-white/10"></div>
+
+    <!-- Контент футера без рамок і тіней -->
+    <div class="py-8 md:py-10 grid grid-cols-1 md:grid-cols-3 gap-10">
+
+      <!-- About -->
+      <section class="min-w-0">
+        <h3 class="text-lg md:text-xl font-semibold">Athletic Manager</h3>
+        <p class="mt-3 text-sm md:text-[15px] leading-relaxed text-gray-600 dark:text-gray-300 text-justify">
+          Платформа для керування спортивними тренуваннями та ресурсами. Допомагає тренерам і
+          спортсменам залишатися організованими та досягати цілей.
+        </p>
+        <span
+          class="inline-flex items-center mt-4 rounded-full bg-brand-600 px-3 py-1
+                 text-[11px] md:text-xs font-semibold text-white">
+          Версія: v1.0.0
+        </span>
+      </section>
+
+      <!-- Resources -->
+      <section class="min-w-0">
+        <h4 class="text-base md:text-lg font-semibold">Ресурси</h4>
+        <ul class="mt-3 space-y-2">
+          <li class="flex items-center gap-2 text-sm md:text-[15px]">
+            <span>🐙</span><a href="#" class="hover:text-brand-600">GitHub проєкту</a>
+          </li>
+          <li class="flex items-center gap-2 text-sm md:text-[15px]">
+            <span>🦄</span>
+            <a href="https://www.djangoproject.com/" target="_blank" rel="noopener" class="hover:text-brand-600">Django</a>
+          </li>
+          <li class="flex items-center gap-2 text-sm md:text-[15px]">
+            <span>🎨</span>
+            <a href="https://tailwindcss.com/" target="_blank" rel="noopener" class="hover:text-brand-600">Tailwind CSS</a>
+          </li>
+          <li class="flex items-center gap-2 text-sm md:text-[15px]">
+            <span>📚</span>
+            <a href="https://developer.mozilla.org/" target="_blank" rel="noopener" class="hover:text-brand-600">Документація MDN</a>
+          </li>
+        </ul>
+      </section>
+
+      <!-- Contacts -->
+      <section class="min-w-0">
+        <h4 class="text-base md:text-lg font-semibold">Контакти</h4>
+        <ul class="mt-3 space-y-2">
+          <li class="flex items-center gap-2 text-sm md:text-[15px]">
+            <span>📧</span>
+            <a href="mailto:vladnahim821@gmail.com" class="hover:text-brand-600">vladnahim821@gmail.com</a>
+          </li>
+          <li class="flex items-center gap-2 text-sm md:text-[15px]">
+            <span>📞</span>
+            <a href="tel:+12244063321" class="hover:text-brand-600">+1 (224) 406-3321</a>
+          </li>
+        </ul>
+      </section>
+    </div>
+
+    <!-- Тонка лінія та приписка -->
+    <div class="border-t border-gray-200 dark:border-white/10"></div>
+    <div class="py-4 text-center text-[11px] md:text-xs text-gray-500 dark:text-gray-400">
+      © {{ now|date:"Y" }} Athletic Manager. Усі права захищені. Розроблено з ❤️ на
+      <span class="font-medium">Django</span> та <span class="font-medium">Tailwind CSS</span>.
+    </div>
+
+  </div>
+</footer>

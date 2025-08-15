@@ -2,8 +2,8 @@
 module.exports = {
   darkMode: 'class',
   content: [
-    './templates/**/*.html',     // шаблони всередині цього app
-    '../**/templates/**/*.html'  // шаблони інших app (на випадок include/extends)
+    "./**/templates/**/*.html",
+    "./dashboard/static/**/*.js",
   ],
   theme: {
     container: { center: true, padding: '1rem' },
@@ -19,8 +19,8 @@ module.exports = {
         soft: '0 10px 30px rgba(0,0,0,.08)',
         focus: '0 0 0 3px rgba(47,116,255,.35)'
       },
-      borderRadius: { xl: '1rem' }
+      borderRadius: { xl: '1rem', '2xl': '1.25rem' }
     }
   },
-  plugins: []
+  plugins: [],
 }

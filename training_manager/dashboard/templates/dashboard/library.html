@@ -3,45 +3,89 @@
 {% block title %}Бібліотека — Athletic Manager{% endblock %}
 
 {% block content %}
-<h2 class="text-2xl font-bold mb-6">🎥 Бібліотека відео</h2>
+  <h1 class="text-2xl md:text-3xl font-semibold tracking-tight mb-6">🎥 Бібліотека відео</h1>
 
-<!-- Фільтр -->
-<form method="get" class="mb-6 flex gap-4 items-center">
-    <label for="event" class="font-medium">Фільтр за типом події:</label>
-    <select name="event" id="event" class="border px-3 py-2 rounded">
-        <option value="">Усі</option>
-        <option value="RUNNING" {% if filter_event == 'RUNNING' %}selected{% endif %}>Біг</option>
-        <option value="JUMPING" {% if filter_event == 'JUMPING' %}selected{% endif %}>Стрибки</option>
-        <option value="THROWING" {% if filter_event == 'THROWING' %}selected{% endif %}>Метання/Штовхання</option>
-    </select>
-    <button type="submit" class="bg-blue-700 text-white px-4 py-2 rounded hover:bg-blue-800">Застосувати</button>
-</form>
+  <!-- Фільтр -->
+  <article class="card mb-8">
+    <form method="get" class="card-body grid grid-cols-1 md:grid-cols-[auto,1fr,auto] gap-4 md:items-center">
+      <label for="event" class="text-sm font-medium text-gray-700 dark:text-gray-200">
+        Фільтр за типом події:
+      </label>
 
-<!-- Категорії -->
-{% if categories %}
-    <div class="space-y-6">
-        {% for cat in categories %}
-            {% if cat.videos.all %}
-                <div class="bg-white p-6 rounded shadow">
-                    <h3 class="text-lg font-semibold mb-2">{{ cat.get_attempt_type_display }} – {{ cat.place }}, {{ cat.date }}</h3>
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
-                        {% for video in cat.videos.all %}
-                            <div class="border rounded p-4 shadow-sm">
-                                <p><strong>Тип:</strong> {{ video.get_event_type_display }}</p>
-                                <p><strong>Результат:</strong> {{ video.result }}</p>
-                                <p><strong>Спроба №:</strong> {{ video.attempt_number }}</p>
-                                <p><strong>Час:</strong> {{ video.time }}</p>
-                                <video controls class="w-full mt-2 rounded">
-                                    <source src="{{ video.video.url }}" type="video/mp4">
-                                </video>
-                            </div>
-                        {% endfor %}
-                    </div>
+      <div>
+        <select
+          name="event"
+          id="event"
+          class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm
+                 focus:outline-none focus:ring-2 focus:ring-brand-500
+                 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-100">
+          <option value="">Усі</option>
+          <option value="RUNNING"  {% if filter_event == 'RUNNING' %}selected{% endif %}>Біг</option>
+          <option value="JUMPING"  {% if filter_event == 'JUMPING' %}selected{% endif %}>Стрибки</option>
+          <option value="THROWING" {% if filter_event == 'THROWING' %}selected{% endif %}>Метання/Штовхання</option>
+        </select>
+      </div>
+
+      <div class="flex md:justify-end">
+        <button type="submit" class="btn btn-primary">Застосувати</button>
+      </div>
+    </form>
+  </article>
+
+  <!-- Категорії -->
+  {% if categories %}
+    <div class="space-y-8">
+      {% for cat in categories %}
+        {% with videos=cat.videos.all %}
+          {% if videos|length %}
+            <article class="card">
+              <header class="card-body pb-4 border-b border-gray-200 dark:border-white/10">
+                <div class="flex flex-wrap items-center gap-3 justify-between">
+                  <h2 class="text-lg font-semibold">
+                    {{ cat.get_attempt_type_display }}
+                  </h2>
+                  <div class="flex flex-wrap items-center gap-2 text-xs">
+                    <span class="inline-flex items-center rounded-full bg-gray-200 px-2.5 py-1 font-medium text-gray-800 dark:bg-white/10 dark:text-gray-200">
+                      📍 {{ cat.place }}
+                    </span>
+                    <span class="inline-flex items-center rounded-full bg-gray-200 px-2.5 py-1 font-medium text-gray-800 dark:bg_white/10 dark:text-gray-200">
+                      📅 {{ cat.date }}
+                    </span>
+                  </div>
                 </div>
-            {% endif %}
-        {% endfor %}
+              </header>
+
+              <div class="card-body">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {% for video in videos %}
+                    <article class="card overflow-hidden">
+                      <div class="card-body pb-0">
+                        <ul class="text-sm space-y-1">
+                          <li><span class="text-gray-500 dark:text-gray-400">🏷️ Тип:</span> {{ video.get_event_type_display }}</li>
+                          <li><span class="text-gray-500 dark:text-gray-400">🎯 Результат:</span> {{ video.result }}</li>
+                          <li><span class="text-gray-500 dark:text-gray-400">🧮 Спроба №:</span> {{ video.attempt_number }}</li>
+                          <li><span class="text-gray-500 dark:text-gray-400">⏱️ Час:</span> {{ video.time }}</li>
+                        </ul>
+                      </div>
+                      <div class="p-4 pt-3">
+                        <video controls class="w-full rounded-lg ring-1 ring-gray-200 dark:ring-white/10">
+                          <source src="{{ video.video.url }}" type="video/mp4">
+                        </video>
+                      </div>
+                    </article>
+                  {% endfor %}
+                </div>
+              </div>
+            </article>
+          {% endif %}
+        {% endwith %}
+      {% endfor %}
     </div>
-{% else %}
-    <p class="text-gray-600 italic">Немає доступних категорій або відео.</p>
-{% endif %}
+  {% else %}
+    <article class="card">
+      <div class="card-body">
+        <p class="text-gray-600 dark:text-gray-300 italic">Немає доступних категорій або відео.</p>
+      </div>
+    </article>
+  {% endif %}
 {% endblock %}

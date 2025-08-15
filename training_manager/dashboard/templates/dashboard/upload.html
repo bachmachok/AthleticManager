@@ -3,122 +3,225 @@
 {% block title %}Завантаження — Athletic Manager{% endblock %}
 
 {% block content %}
-<h2 class="text-2xl font-bold mb-6">Завантаження відео та категорій</h2>
+  <h1 class="text-2xl md:text-3xl font-semibold tracking-tight mb-6">
+    ⤴️ Завантаження відео та категорій
+  </h1>
 
-<div class="mb-6 border-b border-gray-300">
-  <nav class="flex space-x-4">
-    <button data-tab="categories" class="tab-btn px-4 py-2 font-semibold border-b-2 border-blue-700 text-blue-700">Категорії спроб</button>
-    <button data-tab="videos" class="tab-btn px-4 py-2 font-semibold text-gray-600 hover:text-blue-700">Відео проб</button>
-  </nav>
-</div>
+  <!-- Вкладки -->
+  <div class="mb-6">
+    <nav class="inline-flex items-center gap-1 rounded-lg border border-gray-200 bg-white p-1 shadow-sm dark:border-gray-800 dark:bg-gray-800/60">
+      <button
+        type="button"
+        class="tab-btn px-4 py-2 text-sm font-medium rounded-md focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+        data-tab="categories"
+        aria-controls="categories"
+        aria-selected="true"
+      >
+        Категорії спроб
+      </button>
+      <button
+        type="button"
+        class="tab-btn px-4 py-2 text-sm font-medium rounded-md focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+        data-tab="videos"
+        aria-controls="videos"
+        aria-selected="false"
+      >
+        Відео проб
+      </button>
+    </nav>
+  </div>
 
-<!-- Вкладка Категорії -->
-<div id="categories" class="tab-content">
-  <h3 class="text-xl font-semibold mb-4">Додати / Редагувати категорію</h3>
-  <form method="post" novalidate class="mb-6">
-    {% csrf_token %}
-    {{ category_form.as_p }}
-    <button name="create_category" type="submit" class="bg-blue-700 text-white px-4 py-2 rounded hover:bg-blue-800">Зберегти категорію</button>
-  </form>
+  <!-- Категорії -->
+  <section id="categories" class="tab-content space-y-8">
+    <!-- Форма категорії -->
+    <article class="card">
+      <header class="px-6 pt-6">
+        <h2 class="text-lg md:text-xl font-semibold">Додати / Редагувати категорію</h2>
+      </header>
+      <div class="p-6">
+        <form method="post" novalidate class="space-y-5">
+          {% csrf_token %}
+          {{ category_form.as_p }}
+          <div class="pt-1 flex items-center gap-3">
+            <button name="create_category" type="submit" class="btn btn-primary">
+              Зберегти категорію
+            </button>
+            <a href="{% url 'upload' %}" class="btn btn-ghost">Скинути</a>
+          </div>
+        </form>
+      </div>
+    </article>
 
-  <h3 class="text-xl font-semibold mb-2">Існуючі категорії</h3>
-  <table class="w-full border-collapse border border-gray-300">
-    <thead>
-      <tr class="bg-gray-200">
-        <th class="border border-gray-300 px-2 py-1">Тип спроби</th>
-        <th class="border border-gray-300 px-2 py-1">Місце</th>
-        <th class="border border-gray-300 px-2 py-1">Дата</th>
-        <th class="border border-gray-300 px-2 py-1">Дії</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for cat in categories %}
-      <tr>
-        <td class="border border-gray-300 px-2 py-1">{{ cat.get_attempt_type_display }}</td>
-        <td class="border border-gray-300 px-2 py-1">{{ cat.place }}</td>
-        <td class="border border-gray-300 px-2 py-1">{{ cat.date }}</td>
-        <td class="border border-gray-300 px-2 py-1 space-x-2">
-          <a href="{% url 'edit_category' cat.id %}" class="text-blue-600 hover:underline">Редагувати</a>
-          <form method="post" action="{% url 'delete_category' cat.id %}" style="display:inline;">
-            {% csrf_token %}
-            <button type="submit" onclick="return confirm('Ви дійсно хочете видалити цю категорію?');" class="text-red-600 hover:underline">Видалити</button>
-          </form>
-        </td>
-      </tr>
-      {% empty %}
-      <tr>
-        <td colspan="4" class="text-center py-4">Категорії відсутні</td>
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
-</div>
+    <!-- Таблиця категорій -->
+    <article class="card">
+      <header class="px-6 pt-6 pb-4 border-b border-gray-200 dark:border-white/10">
+        <h3 class="text-base md:text-lg font-semibold">Існуючі категорії</h3>
+      </header>
+      <div class="p-0">
+        <div class="overflow-x-auto">
+          <table class="min-w-full text-sm">
+            <thead class="bg-gray-50 text-gray-600 dark:bg-gray-800/50 dark:text-gray-300">
+              <tr>
+                <th class="px-4 py-2 text-left font-medium">Тип спроби</th>
+                <th class="px-4 py-2 text-left font-medium">Місце</th>
+                <th class="px-4 py-2 text-left font-medium">Дата</th>
+                <th class="px-4 py-2 text-left font-medium w-40">Дії</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100 dark:divide-white/10">
+              {% for cat in categories %}
+                <tr class="hover:bg-gray-50 dark:hover:bg-white/5 transition">
+                  <td class="px-4 py-2">{{ cat.get_attempt_type_display }}</td>
+                  <td class="px-4 py-2">{{ cat.place }}</td>
+                  <td class="px-4 py-2">{{ cat.date }}</td>
+                  <td class="px-4 py-2">
+                    <div class="flex items-center gap-2">
+                      <a href="{% url 'edit_category' cat.id %}" class="btn btn-ghost px-3 py-1 text-sm">
+                        Редагувати
+                      </a>
+                      <form method="post" action="{% url 'delete_category' cat.id %}" class="inline"
+                            onsubmit="return confirm('Ви дійсно хочете видалити цю категорію?');">
+                        {% csrf_token %}
+                        <button type="submit" class="btn px-3 py-1 text-sm bg-red-600 hover:bg-red-700 text-white">
+                          Видалити
+                        </button>
+                      </form>
+                    </div>
+                  </td>
+                </tr>
+              {% empty %}
+                <tr>
+                  <td colspan="4" class="px-4 py-6 text-center text-gray-600 dark:text-gray-300">
+                    Категорії відсутні
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </article>
+  </section>
 
-<!-- Вкладка Відео -->
-<div id="videos" class="tab-content hidden">
-  <h3 class="text-xl font-semibold mb-4">Додати / Редагувати відео проби</h3>
-  <form method="post" enctype="multipart/form-data" novalidate class="mb-6">
-    {% csrf_token %}
-    {{ video_form.as_p }}
-    <button name="add_video" type="submit" class="bg-green-700 text-white px-4 py-2 rounded hover:bg-green-800">Додати відео</button>
-  </form>
+  <!-- Відео -->
+  <section id="videos" class="tab-content hidden space-y-8">
+    <!-- Форма відео -->
+    <article class="card">
+      <header class="px-6 pt-6">
+        <h2 class="text-lg md:text-xl font-semibold">Додати / Редагувати відео проби</h2>
+      </header>
+      <div class="p-6">
+        <form method="post" enctype="multipart/form-data" novalidate class="space-y-5">
+          {% csrf_token %}
+          {{ video_form.as_p }}
+          <div class="pt-1 flex items-center gap-3">
+            <button name="add_video" type="submit" class="btn btn-primary">
+              Додати відео
+            </button>
+            <a href="{% url 'upload' %}" class="btn btn-ghost">Скинути</a>
+          </div>
+        </form>
+      </div>
+    </article>
 
-  <h3 class="text-xl font-semibold mb-2">Існуючі відео</h3>
-  <table class="w-full border-collapse border border-gray-300">
-    <thead>
-      <tr class="bg-gray-200">
-        <th class="border border-gray-300 px-2 py-1">Категорія</th>
-        <th class="border border-gray-300 px-2 py-1">Подія</th>
-        <th class="border border-gray-300 px-2 py-1">Спроба №</th>
-        <th class="border border-gray-300 px-2 py-1">Результат</th>
-        <th class="border border-gray-300 px-2 py-1">Місце</th>
-        <th class="border border-gray-300 px-2 py-1">Час</th>
-        <th class="border border-gray-300 px-2 py-1">Дії</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for video in videos %}
-      <tr>
-        <td class="border border-gray-300 px-2 py-1">{{ video.category }}</td>
-        <td class="border border-gray-300 px-2 py-1">{{ video.get_event_type_display }}</td>
-        <td class="border border-gray-300 px-2 py-1">{{ video.attempt_number }}</td>
-        <td class="border border-gray-300 px-2 py-1">{{ video.result }}</td>
-        <td class="border border-gray-300 px-2 py-1">{{ video.place }}</td>
-        <td class="border border-gray-300 px-2 py-1">{{ video.time }}</td>
-        <td class="border border-gray-300 px-2 py-1 space-x-2">
-          <a href="{% url 'edit_video' video.id %}" class="text-blue-600 hover:underline">Редагувати</a>
-          <form method="post" action="{% url 'delete_video' video.id %}" style="display:inline;">
-            {% csrf_token %}
-            <button type="submit" onclick="return confirm('Ви дійсно хочете видалити це відео?');" class="text-red-600 hover:underline">Видалити</button>
-          </form>
-        </td>
-      </tr>
-      {% empty %}
-      <tr>
-        <td colspan="7" class="text-center py-4">Відео відсутні</td>
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
-</div>
+    <!-- Таблиця відео -->
+    <article class="card">
+      <header class="px-6 pt-6 pb-4 border-b border-gray-200 dark:border-white/10">
+        <h3 class="text-base md:text-lg font-semibold">Існуючі відео</h3>
+      </header>
+      <div class="p-0">
+        <div class="overflow-x-auto">
+          <table class="min-w-full text-sm">
+            <thead class="bg-gray-50 text-gray-600 dark:bg-gray-800/50 dark:text-gray-300">
+              <tr>
+                <th class="px-4 py-2 text-left font-medium">Категорія</th>
+                <th class="px-4 py-2 text-left font-medium">Подія</th>
+                <th class="px-4 py-2 text-left font-medium">Спроба №</th>
+                <th class="px-4 py-2 text-left font-medium">Результат</th>
+                <th class="px-4 py-2 text-left font-medium">Місце</th>
+                <th class="px-4 py-2 text-left font-medium">Час</th>
+                <th class="px-4 py-2 text-left font-medium w-40">Дії</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100 dark:divide-white/10">
+              {% for video in videos %}
+                <tr class="hover:bg-gray-50 dark:hover:bg-white/5 transition">
+                  <td class="px-4 py-2">{{ video.category }}</td>
+                  <td class="px-4 py-2">{{ video.get_event_type_display }}</td>
+                  <td class="px-4 py-2">{{ video.attempt_number }}</td>
+                  <td class="px-4 py-2">{{ video.result }}</td>
+                  <td class="px-4 py-2">{{ video.place }}</td>
+                  <td class="px-4 py-2">{{ video.time }}</td>
+                  <td class="px-4 py-2">
+                    <div class="flex items-center gap-2">
+                      <a href="{% url 'edit_video' video.id %}" class="btn btn-ghost px-3 py-1 text-sm">
+                        Редагувати
+                      </a>
+                      <form method="post" action="{% url 'delete_video' video.id %}" class="inline"
+                            onsubmit="return confirm('Ви дійсно хочете видалити це відео?');">
+                        {% csrf_token %}
+                        <button type="submit" class="btn px-3 py-1 text-sm bg-red-600 hover:bg-red-700 text-white">
+                          Видалити
+                        </button>
+                      </form>
+                    </div>
+                  </td>
+                </tr>
+              {% empty %}
+                <tr>
+                  <td colspan="7" class="px-4 py-6 text-center text-gray-600 dark:text-gray-300">
+                    Відео відсутні
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </article>
+  </section>
 
-<script>
-  // Простий JS для вкладок
-  const tabs = document.querySelectorAll('.tab-btn');
-  const contents = document.querySelectorAll('.tab-content');
+  <script>
+    // Логіка вкладок із збереженням активної через hash
+    (function () {
+      const btns = Array.from(document.querySelectorAll('.tab-btn'));
+      const panes = {
+        categories: document.getElementById('categories'),
+        videos: document.getElementById('videos'),
+      };
 
-  tabs.forEach(tab => {
-    tab.addEventListener('click', () => {
-      tabs.forEach(t => {
-        t.classList.remove('border-blue-700', 'text-blue-700');
-        t.classList.add('text-gray-600');
+      function setActive(name) {
+        // Кнопки
+        btns.forEach(b => {
+          const isActive = b.dataset.tab === name;
+          b.setAttribute('aria-selected', String(isActive));
+          b.classList.toggle('bg-brand-600', isActive);
+          b.classList.toggle('text-white', isActive);
+          b.classList.toggle('shadow', isActive);
+          b.classList.toggle('text-gray-600', !isActive);
+          b.classList.toggle('hover:bg-gray-100', !isActive);
+        });
+        // Панелі
+        Object.entries(panes).forEach(([key, el]) => {
+          if (!el) return;
+          if (key === name) el.classList.remove('hidden');
+          else el.classList.add('hidden');
+        });
+      }
+
+      // Початковий стан: із hash або "categories"
+      const initial = (location.hash || '#categories').replace('#','');
+      setActive(panes[initial] ? initial : 'categories');
+
+      // Події кліків
+      btns.forEach(b => {
+        b.addEventListener('click', () => {
+          const name = b.dataset.tab;
+          setActive(name);
+          // Оновимо hash для прямого посилання/оновлення сторінки
+          history.replaceState(null, '', '#' + name);
+        });
       });
-      contents.forEach(c => c.classList.add('hidden'));
-
-      tab.classList.add('border-blue-700', 'text-blue-700');
-      tab.classList.remove('text-gray-600');
-      document.getElementById(tab.dataset.tab).classList.remove('hidden');
-    });
-  });
-</script>
+    })();
+  </script>
 {% endblock %}

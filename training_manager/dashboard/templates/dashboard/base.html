@@ -10,35 +10,36 @@
 </head>
 <body id="app" class="h-full bg-gray-50 text-gray-900 antialiased dark:bg-gray-900 dark:text-gray-100">
 
-<!-- Overlay для мобільного off‑canvas -->
+<!-- Overlay для мобільного off-canvas -->
 <div id="overlay" class="fixed inset-0 z-40 hidden bg-black/40 backdrop-blur-sm md:hidden"></div>
 
-<!-- На md+ це грід [sidebar | content] -->
+<!-- Грід: sidebar | content -->
 <div id="layout" class="min-h-screen md:layout-grid">
 
   <!-- SIDEBAR -->
-  <aside id="sidebar"
-         class="sidebar z-50 bg-gradient-to-b from-brand-800 to-brand-900 text-white
-                md:static md:translate-x-0 md:h-auto md:flex md:flex-col
-                fixed inset-y-0 left-0 -translate-x-full transition-all duration-300">
+  <aside
+    id="sidebar"
+    class="sidebar z-50 bg-gradient-to-b from-brand-800 to-brand-900 text-white
+           fixed inset-y-0 left-0 -translate-x-full md:translate-x-0 transition-all duration-300
+           md:sticky md:top-0 md:h-screen md:flex md:flex-col">
 
     <!-- Верхній бар -->
     <div class="sb-top">
       <div class="flex items-center gap-3">
-        <!-- Лого (у згорнутому режимі на hover показує "бургер"; клік — перемикає) -->
         <button id="logoToggle" class="logo-toggle" aria-label="Розгорнути/згорнути">
           <span class="ico-logo">🏃</span>
           <span class="ico-menu">☰</span>
         </button>
         <span class="brand-text text-white/90 font-semibold select-none">Athletic Manager</span>
       </div>
-
-      <!-- Кнопка-колапс показується лише в розгорнутому стані (у згорнутому прихована CSS) -->
-      <button id="menuToggle" class="safe-tap rounded-lg bg-white/10 px-3 py-2 hover:bg-white/20 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40"
-              aria-label="Згорнути меню" aria-expanded="true">☰</button>
+      <button
+        id="menuToggle"
+        class="safe-tap rounded-lg bg-white/10 px-3 py-2 hover:bg-white/20 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40"
+        aria-label="Згорнути меню"
+        aria-expanded="true">☰</button>
     </div>
 
-    <!-- Блок користувача — при згорненні повністю зникає -->
+    <!-- Блок користувача -->
     <div class="user-block m-4 rounded-lg bg-white/5 p-3">
       <div class="flex items-center gap-3">
         <div class="h-9 w-9 shrink-0 rounded-full bg-white/20 grid place-items-center">👤</div>
@@ -86,29 +87,32 @@
       </a>
     </nav>
     {% endwith %}
-
-    <!-- НИЖНІЙ БЛОК ВИДАЛЕНО: ніяких версій і перемикача теми -->
   </aside>
 
   <!-- CONTENT -->
-  <main id="main" class="pt-4 md:pt-6">
+  <main id="main" class="pt-4 md:pt-6 flex flex-col min-h-screen">
     <div class="hidden md:flex justify-end pr-4 text-xs text-gray-500 dark:text-gray-400">
       {% if request.resolver_match.url_name %}/ {{ request.resolver_match.url_name }}{% endif %}
     </div>
 
-    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6">
+    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6 flex-grow">
       {% block content %}{% endblock %}
     </div>
+
+    <!-- «Штовхач» 1px, щоб футер завжди починався після 100% висоти екрана -->
+    <div class="h-px shrink-0"></div>
+
+    {% include 'dashboard/footer.html' %}
   </main>
 </div>
 
 <script>
-  const app = document.getElementById('app');
-  const layout = document.getElementById('layout');
-  const sidebar = document.getElementById('sidebar');
-  const overlay = document.getElementById('overlay');
-  const menuToggle = document.getElementById('menuToggle'); // видимий лише у розгорнутому
-  const logoToggle = document.getElementById('logoToggle'); // завжди є (у колапсі працює як бургер)
+  const app       = document.getElementById('app');
+  const layout    = document.getElementById('layout');
+  const sidebar   = document.getElementById('sidebar');
+  const overlay   = document.getElementById('overlay');
+  const menuToggle= document.getElementById('menuToggle');
+  const logoToggle= document.getElementById('logoToggle');
   const mqDesktop = window.matchMedia('(min-width: 768px)');
 
   function openMobile() {
@@ -127,18 +131,17 @@
     sidebar.classList.toggle('sidebar--collapsed');
     menuToggle?.setAttribute('aria-expanded', String(!app.classList.contains('has-collapsed')));
   }
-
   function toggleMenu() {
     if (mqDesktop.matches) {
-      toggleDesktopCollapse();
+      toggleDesktopCollapse();     // desktop: колапс/розгортання рейки
     } else {
       const hidden = sidebar.classList.contains('-translate-x-full');
-      hidden ? openMobile() : closeMobile();
+      hidden ? openMobile() : closeMobile();  // mobile: off-canvas
     }
   }
 
   menuToggle?.addEventListener('click', toggleMenu);
-  logoToggle?.addEventListener('click', toggleMenu); // у згорнутому клік по лого розгортає
+  logoToggle?.addEventListener('click', toggleMenu);
   overlay?.addEventListener('click', closeMobile);
   window.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeMobile(); });
 </script>
