@@ -1,227 +1,290 @@
 {% extends "dashboard/base.html" %}
-
-{% block title %}Завантаження — Athletic Manager{% endblock %}
+{% load static %}
+{% block title %}Завантаження відео та категорій — Athletic Manager{% endblock %}
 
 {% block content %}
-  <h1 class="text-2xl md:text-3xl font-semibold tracking-tight mb-6">
+
+<style>
+  /* ===== СТАБІЛЬНЕ ПОЛОТНО І ЦЕНТР ===== */
+  :root{ --upload-container: 1120px; }
+  .upload-shell{ max-width: var(--upload-container); margin-inline:auto; }
+  .page-title{ text-align:center; margin:0 0 18px 0; }
+
+  /* вкладки — фіксована «пігулка», по центру */
+  .tabs-wrap{ display:flex; justify-content:center; margin-bottom:18px; }
+  .tabs{
+    display:grid; grid-template-columns: 1fr 1fr; gap:8px; width:520px; padding:6px;
+    border-radius:12px; background: var(--card-bg,#fff);
+    box-shadow: 0 1px 2px rgba(0,0,0,.04), 0 8px 24px rgba(0,0,0,.06);
+  }
+  .tabs button{
+    border:none; border-radius:10px; padding:10px 16px; font-weight:600; line-height:1; cursor:pointer;
+    transition: transform .06s, box-shadow .15s, background .15s; background:transparent;
+  }
+  .tabs button[aria-selected="true"]{ background:#1e49ff; color:#fff; box-shadow:0 6px 18px rgba(30,73,255,.35); }
+  .tabs button:focus-visible{ outline:2px solid #1e49ff; outline-offset:2px; }
+
+  /* ===== СТЕК БЛОКІВ: кожен по центру, ширина за контентом ===== */
+  .block-stack{ display:flex; flex-direction:column; align-items:center; gap:24px; }
+
+  /* базова картка — inline-block, тож не тягнеться на всю ширину */
+  .upload-card{
+    display:inline-block; max-width:100%;
+    border-radius:16px; background: var(--card-bg,#fff);
+    box-shadow: 0 1px 2px rgba(0,0,0,.04), 0 16px 40px rgba(0,0,0,.07);
+    padding:28px;
+  }
+  .card-title{ text-align:center; font-weight:700; font-size:22px; margin:4px 0 22px; }
+
+  /* ===== ФОРМА — контент вирішує ширину ===== */
+  .upload-card--form{ }
+  .upload-card--form .form-grid{
+    display:grid;
+    grid-template-columns: max-content max-content; /* не розтягуємося */
+    gap:22px 44px;
+  }
+  @media (max-width: 900px){
+    .upload-card--form .form-grid{ grid-template-columns: max-content; }
+  }
+  .field label{ display:block; margin-bottom:6px; font-size:14px; color: var(--muted,#4b5563); }
+  .control > *{
+    width:auto;            /* більше не 100% */
+    max-width:340px;       /* запобігає монструозним елементам */
+    min-width:200px;       /* щоб не було надто вузько */
+  }
+  .control.control--wide > *{ max-width:520px; min-width:240px; }
+  .unit-badge{
+    display:inline-block; margin-left:6px; padding:2px 8px; font-size:11px;
+    border-radius:999px; background:#eef2ff; color:#1e49ff; vertical-align:middle;
+  }
+  .actions{ display:flex; justify-content:center; gap:12px; margin-top:8px; }
+
+  /* ===== ТАБЛИЦІ — незалежні, ширина за таблицею ===== */
+  .upload-card--table .table-wrap{
+    display:inline-block;              /* картка підхоплює ширину контенту */
+    max-width: min(100vw - 48px, var(--upload-container)); /* але не виходимо за в’юпорт */
+    overflow-x:auto;
+  }
+  .upload-card--table table{ width: max-content; border-collapse: collapse; }
+  thead tr{ background:#f9fafb; }
+  th, td{ text-align:left; padding:10px 12px; border-bottom:1px solid rgba(0,0,0,.06); white-space:nowrap; }
+</style>
+
+<div class="upload-shell">
+
+  <h1 class="page-title text-2xl md:text-3xl font-semibold tracking-tight">
     ⤴️ Завантаження відео та категорій
   </h1>
 
-  <!-- Вкладки -->
-  <div class="mb-6">
-    <nav class="inline-flex items-center gap-1 rounded-lg border border-gray-200 bg-white p-1 shadow-sm dark:border-gray-800 dark:bg-gray-800/60">
-      <button
-        type="button"
-        class="tab-btn px-4 py-2 text-sm font-medium rounded-md focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
-        data-tab="categories"
-        aria-controls="categories"
-        aria-selected="true"
-      >
-        Категорії спроб
-      </button>
-      <button
-        type="button"
-        class="tab-btn px-4 py-2 text-sm font-medium rounded-md focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
-        data-tab="videos"
-        aria-controls="videos"
-        aria-selected="false"
-      >
-        Відео проб
-      </button>
-    </nav>
+  <!-- ВКЛАДКИ -->
+  <div class="tabs-wrap">
+    <div class="tabs" role="tablist" aria-label="Вкладки завантаження">
+      <button type="button" class="tab-btn" data-tab="categories" aria-selected="true"  aria-controls="tab-categories">Категорії спроб</button>
+      <button type="button" class="tab-btn" data-tab="videos"      aria-selected="false" aria-controls="tab-videos">Відео проб</button>
+    </div>
   </div>
 
-  <!-- Категорії -->
-  <section id="categories" class="tab-content space-y-8">
-    <!-- Форма категорії -->
-    <article class="card">
-      <header class="px-6 pt-6">
-        <h2 class="text-lg md:text-xl font-semibold">Додати / Редагувати категорію</h2>
-      </header>
-      <div class="p-6">
-        <form method="post" novalidate class="space-y-5">
+  <!-- ===== КАТЕГОРІЇ ===== -->
+  <section id="tab-categories" class="tab-pane">
+    <div class="block-stack">
+
+      <!-- ФОРМА (вузька, по контенту) -->
+      <article class="upload-card upload-card--form">
+        <h2 class="card-title">Додати / Редагувати категорію</h2>
+        <form method="post" novalidate>
           {% csrf_token %}
-          {{ category_form.as_p }}
-          <div class="pt-1 flex items-center gap-3">
-            <button name="create_category" type="submit" class="btn btn-primary">
-              Зберегти категорію
-            </button>
-            <a href="{% url 'upload' %}" class="btn btn-ghost">Скинути</a>
+          <div class="form-grid">
+            <div class="field">
+              <label for="{{ category_form.attempt_type.id_for_label }}">{{ category_form.attempt_type.label }}</label>
+              <div class="control">{{ category_form.attempt_type }}</div>
+            </div>
+            <div class="field">
+              <label for="{{ category_form.place.id_for_label }}">{{ category_form.place.label }}</label>
+              <div class="control control--wide">{{ category_form.place }}</div>
+            </div>
+            <div class="field">
+              <label for="{{ category_form.date.id_for_label }}">{{ category_form.date.label }}</label>
+              <div class="control">{{ category_form.date }}</div>
+            </div>
+            <div class="field" id="rank-field">
+              <label for="{{ category_form.rank.id_for_label }}">{{ category_form.rank.label }}</label>
+              <div class="control" style="max-width:160px">{{ category_form.rank }}</div>
+            </div>
+          </div>
+          <div class="actions">
+            <button name="create_category" type="submit" class="btn btn-primary">Зберегти категорію</button>
+            <a class="btn btn-ghost" href="{% url 'upload' %}">Скинути</a>
           </div>
         </form>
-      </div>
-    </article>
+      </article>
 
-    <!-- Таблиця категорій -->
-    <article class="card">
-      <header class="px-6 pt-6 pb-4 border-b border-gray-200 dark:border-white/10">
-        <h3 class="text-base md:text-lg font-semibold">Існуючі категорії</h3>
-      </header>
-      <div class="p-0">
-        <div class="overflow-x-auto">
-          <table class="min-w-full text-sm">
-            <thead class="bg-gray-50 text-gray-600 dark:bg-gray-800/50 dark:text-gray-300">
+      <!-- ТАБЛИЦЯ (широка, але незалежна) -->
+      <article class="upload-card upload-card--table">
+        <h3 class="card-title">Існуючі категорії</h3>
+        <div class="table-wrap">
+          <table>
+            <thead>
               <tr>
-                <th class="px-4 py-2 text-left font-medium">Тип спроби</th>
-                <th class="px-4 py-2 text-left font-medium">Місце</th>
-                <th class="px-4 py-2 text-left font-medium">Дата</th>
-                <th class="px-4 py-2 text-left font-medium w-40">Дії</th>
+                <th>Тип спроби</th><th>Місце</th><th>Дата</th><th>Зайняте місце</th><th style="width:210px">Дії</th>
               </tr>
             </thead>
-            <tbody class="divide-y divide-gray-100 dark:divide-white/10">
+            <tbody>
               {% for cat in categories %}
-                <tr class="hover:bg-gray-50 dark:hover:bg-white/5 transition">
-                  <td class="px-4 py-2">{{ cat.get_attempt_type_display }}</td>
-                  <td class="px-4 py-2">{{ cat.place }}</td>
-                  <td class="px-4 py-2">{{ cat.date }}</td>
-                  <td class="px-4 py-2">
-                    <div class="flex items-center gap-2">
-                      <a href="{% url 'edit_category' cat.id %}" class="btn btn-ghost px-3 py-1 text-sm">
-                        Редагувати
-                      </a>
-                      <form method="post" action="{% url 'delete_category' cat.id %}" class="inline"
-                            onsubmit="return confirm('Ви дійсно хочете видалити цю категорію?');">
-                        {% csrf_token %}
-                        <button type="submit" class="btn px-3 py-1 text-sm bg-red-600 hover:bg-red-700 text-white">
-                          Видалити
-                        </button>
-                      </form>
-                    </div>
+                <tr>
+                  <td>{{ cat.get_attempt_type_display }}</td>
+                  <td>{{ cat.place }}</td>
+                  <td>{{ cat.date }}</td>
+                  <td>{% if cat.rank %}{{ cat.rank }}{% else %}—{% endif %}</td>
+                  <td>
+                    <a href="{% url 'edit_category' cat.id %}" class="btn btn-ghost btn-sm">Редагувати</a>
+                    <form method="post" action="{% url 'delete_category' cat.id %}" class="inline" onsubmit="return confirm('Видалити категорію?');">
+                      {% csrf_token %}
+                      <button class="btn btn-danger btn-sm" type="submit">Видалити</button>
+                    </form>
                   </td>
                 </tr>
               {% empty %}
-                <tr>
-                  <td colspan="4" class="px-4 py-6 text-center text-gray-600 dark:text-gray-300">
-                    Категорії відсутні
-                  </td>
-                </tr>
+                <tr><td colspan="5">Категорій немає</td></tr>
               {% endfor %}
             </tbody>
           </table>
         </div>
-      </div>
-    </article>
+      </article>
+
+    </div>
   </section>
 
-  <!-- Відео -->
-  <section id="videos" class="tab-content hidden space-y-8">
-    <!-- Форма відео -->
-    <article class="card">
-      <header class="px-6 pt-6">
-        <h2 class="text-lg md:text-xl font-semibold">Додати / Редагувати відео проби</h2>
-      </header>
-      <div class="p-6">
-        <form method="post" enctype="multipart/form-data" novalidate class="space-y-5">
+  <!-- ===== ВІДЕО ===== -->
+  <section id="tab-videos" class="tab-pane" hidden>
+    <div class="block-stack">
+
+      <!-- ФОРМА (вузька, по контенту) -->
+      <article class="upload-card upload-card--form">
+        <h2 class="card-title">Додати / Редагувати відео проби</h2>
+        <form method="post" enctype="multipart/form-data" novalidate>
           {% csrf_token %}
-          {{ video_form.as_p }}
-          <div class="pt-1 flex items-center gap-3">
-            <button name="add_video" type="submit" class="btn btn-primary">
-              Додати відео
-            </button>
-            <a href="{% url 'upload' %}" class="btn btn-ghost">Скинути</a>
+          <div class="form-grid">
+            <div class="field">
+              <label for="{{ video_form.category.id_for_label }}">{{ video_form.category.label }}</label>
+              <div class="control">{{ video_form.category }}</div>
+            </div>
+            <div class="field">
+              <label for="{{ video_form.event_type.id_for_label }}">{{ video_form.event_type.label }}</label>
+              <div class="control">{{ video_form.event_type }}</div>
+            </div>
+            <div class="field">
+              <label for="{{ video_form.result.id_for_label }}">
+                {{ video_form.result.label }} <span id="unit-badge" class="unit-badge">—</span>
+              </label>
+              <div class="control" style="max-width:220px">{{ video_form.result }}</div>
+            </div>
+            <div class="field">
+              <label for="{{ video_form.attempt_number.id_for_label }}">{{ video_form.attempt_number.label }}</label>
+              <div class="control" style="max-width:160px">{{ video_form.attempt_number }}</div>
+            </div>
+            <div class="field" id="vip-wrapper">
+              <label for="{{ video_form.place_in_protocol.id_for_label }}">{{ video_form.place_in_protocol.label }}</label>
+              <div class="control" style="max-width:160px">{{ video_form.place_in_protocol }}</div>
+            </div>
+            <div class="field">
+              <label for="{{ video_form.time.id_for_label }}">{{ video_form.time.label }}</label>
+              <div class="control" style="max-width:180px">{{ video_form.time }}</div>
+            </div>
+            <div class="field" style="grid-column:1 / -1;">
+              <label for="{{ video_form.video.id_for_label }}">
+                {{ video_form.video.label }}{% if video_form.video.field.required %}<span class="unit-badge" style="background:#fee2e2;color:#991b1b;margin-left:8px">Обовʼязково</span>{% endif %}
+              </label>
+              <div class="control control--wide">{{ video_form.video }}</div>
+            </div>
+          </div>
+          <div class="actions">
+            <button name="add_video" type="submit" class="btn btn-primary">Додати відео</button>
+            <a class="btn btn-ghost" href="{% url 'upload' %}">Скинути</a>
           </div>
         </form>
-      </div>
-    </article>
+      </article>
 
-    <!-- Таблиця відео -->
-    <article class="card">
-      <header class="px-6 pt-6 pb-4 border-b border-gray-200 dark:border-white/10">
-        <h3 class="text-base md:text-lg font-semibold">Існуючі відео</h3>
-      </header>
-      <div class="p-0">
-        <div class="overflow-x-auto">
-          <table class="min-w-full text-sm">
-            <thead class="bg-gray-50 text-gray-600 dark:bg-gray-800/50 dark:text-gray-300">
+      <!-- ТАБЛИЦЯ (широка, але незалежна) -->
+      <article class="upload-card upload-card--table">
+        <h3 class="card-title">Існуючі відео</h3>
+        <div class="table-wrap">
+          <table>
+            <thead>
               <tr>
-                <th class="px-4 py-2 text-left font-medium">Категорія</th>
-                <th class="px-4 py-2 text-left font-medium">Подія</th>
-                <th class="px-4 py-2 text-left font-medium">Спроба №</th>
-                <th class="px-4 py-2 text-left font-medium">Результат</th>
-                <th class="px-4 py-2 text-left font-medium">Місце</th>
-                <th class="px-4 py-2 text-left font-medium">Час</th>
-                <th class="px-4 py-2 text-left font-medium w-40">Дії</th>
+                <th>Категорія</th><th>Подія</th><th>Спроба №</th><th>Результат</th><th>Місце (протокол)</th><th>Час</th><th style="width:210px">Дії</th>
               </tr>
             </thead>
-            <tbody class="divide-y divide-gray-100 dark:divide-white/10">
+            <tbody>
               {% for video in videos %}
-                <tr class="hover:bg-gray-50 dark:hover:bg-white/5 transition">
-                  <td class="px-4 py-2">{{ video.category }}</td>
-                  <td class="px-4 py-2">{{ video.get_event_type_display }}</td>
-                  <td class="px-4 py-2">{{ video.attempt_number }}</td>
-                  <td class="px-4 py-2">{{ video.result }}</td>
-                  <td class="px-4 py-2">{{ video.place }}</td>
-                  <td class="px-4 py-2">{{ video.time }}</td>
-                  <td class="px-4 py-2">
-                    <div class="flex items-center gap-2">
-                      <a href="{% url 'edit_video' video.id %}" class="btn btn-ghost px-3 py-1 text-sm">
-                        Редагувати
-                      </a>
-                      <form method="post" action="{% url 'delete_video' video.id %}" class="inline"
-                            onsubmit="return confirm('Ви дійсно хочете видалити це відео?');">
-                        {% csrf_token %}
-                        <button type="submit" class="btn px-3 py-1 text-sm bg-red-600 hover:bg-red-700 text-white">
-                          Видалити
-                        </button>
-                      </form>
-                    </div>
+                <tr>
+                  <td>{{ video.category }}</td>
+                  <td>{{ video.get_event_type_display }}</td>
+                  <td>{{ video.attempt_number }}</td>
+                  <td>{{ video.result }}</td>
+                  <td>{% if video.place_in_protocol %}{{ video.place_in_protocol }}{% else %}—{% endif %}</td>
+                  <td>{% if video.time %}{{ video.time }}{% else %}—{% endif %}</td>
+                  <td>
+                    <a href="{% url 'edit_video' video.id %}" class="btn btn-ghost btn-sm">Редагувати</a>
+                    <form method="post" action="{% url 'delete_video' video.id %}" class="inline" onsubmit="return confirm('Видалити відео?');">
+                      {% csrf_token %}
+                      <button class="btn btn-danger btn-sm" type="submit">Видалити</button>
+                    </form>
                   </td>
                 </tr>
               {% empty %}
-                <tr>
-                  <td colspan="7" class="px-4 py-6 text-center text-gray-600 dark:text-gray-300">
-                    Відео відсутні
-                  </td>
-                </tr>
+                <tr><td colspan="7">Відео немає</td></tr>
               {% endfor %}
             </tbody>
           </table>
         </div>
-      </div>
-    </article>
+      </article>
+
+    </div>
   </section>
 
-  <script>
-    // Логіка вкладок із збереженням активної через hash
-    (function () {
-      const btns = Array.from(document.querySelectorAll('.tab-btn'));
-      const panes = {
-        categories: document.getElementById('categories'),
-        videos: document.getElementById('videos'),
-      };
+  {% if categories_meta %}{{ categories_meta|json_script:"categories-meta" }}{% endif %}
 
-      function setActive(name) {
-        // Кнопки
-        btns.forEach(b => {
-          const isActive = b.dataset.tab === name;
-          b.setAttribute('aria-selected', String(isActive));
-          b.classList.toggle('bg-brand-600', isActive);
-          b.classList.toggle('text-white', isActive);
-          b.classList.toggle('shadow', isActive);
-          b.classList.toggle('text-gray-600', !isActive);
-          b.classList.toggle('hover:bg-gray-100', !isActive);
-        });
-        // Панелі
-        Object.entries(panes).forEach(([key, el]) => {
-          if (!el) return;
-          if (key === name) el.classList.remove('hidden');
-          else el.classList.add('hidden');
-        });
-      }
+</div>
 
-      // Початковий стан: із hash або "categories"
-      const initial = (location.hash || '#categories').replace('#','');
-      setActive(panes[initial] ? initial : 'categories');
+<script>
+  // вкладки
+  (function(){
+    const tabs = document.querySelectorAll('.tab-btn');
+    const panes={ categories:document.getElementById('tab-categories'), videos:document.getElementById('tab-videos') };
+    function setActive(name){
+      tabs.forEach(b=>b.setAttribute('aria-selected', b.dataset.tab===name ? 'true':'false'));
+      Object.entries(panes).forEach(([k,el])=> el.hidden = (k!==name));
+      history.replaceState(null,'','#'+name);
+    }
+    tabs.forEach(b=> b.addEventListener('click', ()=> setActive(b.dataset.tab)));
+    const initial=(location.hash||'#videos').replace('#',''); setActive(panes[initial]?initial:'videos');
+  })();
 
-      // Події кліків
-      btns.forEach(b => {
-        b.addEventListener('click', () => {
-          const name = b.dataset.tab;
-          setActive(name);
-          // Оновимо hash для прямого посилання/оновлення сторінки
-          history.replaceState(null, '', '#' + name);
-        });
-      });
-    })();
-  </script>
+  // одиниці біля "Результат"
+  (function(){
+    const eventSel=document.getElementById('id_event_type');
+    const unit=document.getElementById('unit-badge');
+    function updateUnit(){ if(eventSel && unit){ unit.textContent=(eventSel.value==='run')?'с':'м'; } }
+    eventSel?.addEventListener('change', updateUnit); updateUnit();
+  })();
+
+  // «Місце в протоколі»/«Зайняте місце» лише для змагань
+  (function(){
+    const catSel=document.getElementById('id_category');
+    const vipWrap=document.getElementById('vip-wrapper');
+    const rankFld=document.getElementById('rank-field');
+    const typeById={};
+    const metaEl=document.getElementById('categories-meta');
+    if(metaEl){ try{ JSON.parse(metaEl.textContent).forEach(x=> typeById[String(x.id)]=x.attempt_type ); }catch(e){} }
+    function toggle(){
+      if(catSel && vipWrap){ const t=typeById[String(catSel.value||'')]; vipWrap.style.display=(t==='competition')?'':'none'; }
+      const tSel=document.getElementById('id_attempt_type');
+      if(tSel && rankFld){ rankFld.style.display=(tSel.value==='competition')?'':'none'; }
+    }
+    catSel?.addEventListener('change', toggle);
+    document.getElementById('id_attempt_type')?.addEventListener('change', toggle);
+    toggle();
+  })();
+</script>
+
 {% endblock %}

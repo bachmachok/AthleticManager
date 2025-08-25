@@ -1,0 +1,664 @@
+{% extends "dashboard/base.html" %}
+{% load static %}
+{% block title %}Анотації — {{ video }}{% endblock %}
+
+{% block content %}
+<style>
+  /* ===== SCENE ===== */
+  #zoomHost{ overflow:auto; border:1px solid rgba(0,0,0,.08); border-radius:14px; background:#000; }
+  #stage{ position:relative; isolation:isolate; transform-origin: top left; }
+  #stage video{ position:relative; z-index:0; display:block; width:100%; }
+  #annoCanvas{ position:absolute; inset:0; display:block; z-index:10; cursor:crosshair; touch-action:none; user-select:none; }
+  #stage.draw-mode video{ pointer-events:none; }
+
+  /* ===== COMPACT TOOLBAR ===== */
+  .toolbar{
+    /* ширше повзунки, вужча палітра */
+    grid-template-columns: 1.5fr 1.3fr 0.9fr;
+    display:grid; gap:.55rem;
+    border:1px solid rgba(0,0,0,.08);
+    background:linear-gradient(180deg, rgba(255,255,255,.85), rgba(255,255,255,.75));
+    backdrop-filter: blur(6px);
+    border-radius:12px;
+    padding:.44rem .5rem;
+    margin-bottom:.6rem;
+    align-items:stretch;
+    grid-auto-rows:1fr;
+  }
+  @media (max-width: 1200px){ .toolbar{ grid-template-columns: 1fr; } }
+
+  .panel{
+    height:100%;
+    padding:.5rem; border-radius:10px;
+    background:rgba(255,255,255,.7);
+    border:1px dashed rgba(0,0,0,.06);
+    display:flex; flex-direction:column; gap:.5rem;
+  }
+  .section-title{ font-size:.74rem; color:#6b7280; letter-spacing:.02em; }
+  .subline{ font-size:.68rem; color:#9ca3af; margin-top:.05rem; }
+
+  /* Chips / buttons */
+  .chip{ padding:.38rem .58rem; border-radius:.65rem; display:inline-flex; align-items:center; gap:.42rem; font-size:.94rem; }
+  .chip-toggle{ border:1px solid var(--chip-bd, rgba(0,0,0,.15)); background:var(--chip-bg,transparent); }
+  .chip-toggle[aria-pressed="true"]{ --chip-bg: rgba(99,102,241,.13); --chip-bd: rgba(99,102,241,.45); }
+
+  .ico{ width:18px; height:18px; stroke-width:2; stroke:currentColor; fill:none; }
+
+  /* Actions + Tools layout */
+  .actions-grid{
+    display:grid;
+    grid-template-columns: repeat(3, minmax(0,1fr));
+    gap:.45rem;
+    align-items:stretch;
+  }
+  .mode-cell{ grid-column: span 2; } /* toggle рахується як дві кнопки */
+  .tools-grid{
+    display:grid;
+    grid-template-columns: repeat(3, minmax(0,1fr));
+    gap:.45rem .45rem;
+  }
+
+  /* Toggle switch (Редагування ↔ Перегляд) */
+  .switch{
+    display:inline-flex; align-items:center; gap:.55rem;
+    border:1px solid rgba(0,0,0,.15); border-radius:.65rem;
+    padding:.34rem .55rem;
+    background:#fff;
+  }
+  .switch input{ appearance:none; width:42px; height:22px; border-radius:999px; background:#e5e7eb; position:relative; outline:none; cursor:pointer; transition:.2s; }
+  .switch input:before{
+    content:""; position:absolute; width:18px; height:18px; border-radius:999px; left:2px; top:2px; background:#fff;
+    border:1px solid rgba(0,0,0,.25); transition:.2s;
+  }
+  .switch input:checked{ background:#a5b4fc; }
+  .switch input:checked:before{ transform:translateX(20px); }
+
+  /* Sliders (fat) */
+  .range-fat{ height:28px; inline-size:100%; }
+  .range-fat::-webkit-slider-runnable-track{ height:10px; border-radius:999px; background:linear-gradient(90deg,#c7d2fe,#e5e7eb); }
+  .range-fat::-webkit-slider-thumb{ -webkit-appearance:none; appearance:none; width:18px; height:18px; border-radius:50%; background:#6366f1; margin-top:-4px; border:2px solid #fff; box-shadow:0 1px 2px rgba(0,0,0,.15); }
+  .range-fat::-moz-range-track{ height:10px; border-radius:999px; background:#e5e7eb; }
+  .range-fat::-moz-range-thumb{ width:18px; height:18px; border-radius:50%; background:#6366f1; border:2px solid #fff; }
+
+  /* Palette (narrow, fully filled) */
+  .palette{ --sw: 30px; display:grid; grid-template-columns: repeat(6, var(--sw)); gap:.55rem; align-items:center; justify-content:center; }
+  .color-btn{ width:var(--sw); height:var(--sw); border-radius:9999px; border:1px solid rgba(0,0,0,.25); }
+  .color-btn[aria-checked="true"]{ outline:2px solid #6366f1; outline-offset:2px; }
+  .swatch{ width:42px; height:26px; border-radius:8px; border:2px solid rgba(0,0,0,.2); }
+
+    /* ===== Save button overrides ===== */
+  #saveBtn{
+    background:#2563eb !important;
+    border:1px solid rgba(0,0,0,.08) !important;
+    color:#fff !important;
+  }
+  #saveBtn:hover:not(:disabled){
+    background:#1d4ed8 !important;
+  }
+  #saveBtn:disabled{
+    background:#3b82f6 !important;
+    color:#fff !important;
+    cursor:not-allowed;
+  }
+</style>
+
+<!-- Sticky header -->
+<div class="sticky top-0 z-50 pt-3 pb-2 mb-2 bg-gray-50/80 dark:bg-gray-900/80 backdrop-blur">
+  <div class="mx-auto max-w-6xl flex items-center justify-between gap-3">
+    <h1 class="text-2xl font-semibold">Анотації:</h1>
+    <div class="flex items-center gap-2">
+      <!-- Кнопка зберегти (активується після змін; type="button" обов’язково) -->
+      <button id="saveBtn" type="button"
+              class="px-4 py-2 rounded-xl text-white transition disabled:opacity-70"
+              disabled>Зберегти</button>
+
+      <span id="saveBadge" class="text-sm text-green-600 hidden">Збережено ✓</span>
+
+      {% if back_url %}
+        <a href="{{ back_url }}"
+           class="px-4 py-2 rounded-xl bg-gray-200 dark:bg-gray-800 hover:bg-gray-300 dark:hover:bg-gray-700 transition">
+           Назад
+        </a>
+      {% else %}
+        <a href="{% url 'library' %}"
+           class="px-4 py-2 rounded-xl bg-gray-200 dark:bg-gray-800 hover:bg-gray-300 dark:hover:bg-gray-700 transition">
+           Назад
+        </a>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+
+<div class="mx-auto max-w-6xl">
+  <!-- ===== TOOLBAR ===== -->
+  <div class="toolbar">
+
+    <!-- LEFT: Actions + Tools -->
+    <div class="panel">
+      <div class="section-title">Дії</div>
+      <div class="actions-grid">
+        <button id="undoBtn" class="chip chip-toggle" title="Скасувати (Ctrl+Z)">
+          <svg class="ico" viewBox="0 0 24 24"><path d="M9 14l-4-4 4-4"/><path d="M20 20a8 8 0 0 0-8-8H5"/></svg> Скасувати
+        </button>
+        <button id="redoBtn" class="chip chip-toggle" title="Відновити (Ctrl+Y)">
+          <svg class="ico" viewBox="0 0 24 24"><path d="M15 10l4 4-4 4"/><path d="M4 20a8 8 0 0 1 8-8h6"/></svg> Відновити
+        </button>
+        <button id="clearBtn" class="chip chip-toggle" title="Очистити все">
+          <svg class="ico" viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6l1-2h4l1 2"/></svg> Очистити
+        </button>
+
+        <!-- Mode switch spans two cells -->
+        <label class="switch mode-cell" title="Перемкнути режим">
+          <span>Редагування</span>
+          <input id="modeSwitch" type="checkbox" />
+          <span>Перегляд</span>
+        </label>
+
+        <button id="angleLabelBtn" class="chip chip-toggle" aria-pressed="true" title="Показувати градуси">
+          <svg class="ico" viewBox="0 0 24 24"><path d="M3 20V4M3 20H20M3 20L18 8"/><circle cx="18" cy="8" r="1.6"/></svg> Градуси
+        </button>
+      </div>
+
+      <div class="section-title">Інструменти</div>
+      <div class="tools-grid">
+        <button class="tool-btn chip chip-toggle" data-tool="line"   aria-pressed="true"  title="Лінія (L)">
+          <svg class="ico" viewBox="0 0 24 24"><path d="M4 20 20 4"/></svg> Лінія
+        </button>
+        <button class="tool-btn chip chip-toggle" data-tool="angle"  aria-pressed="false" title="Кут (K)">
+          <svg class="ico" viewBox="0 0 24 24"><path d="M4 20V4M4 20L20 20M4 20L18 8"/></svg> Кут
+        </button>
+        <button class="tool-btn chip chip-toggle" data-tool="freehand" aria-pressed="false" title="Олівець (P)">
+          <svg class="ico" viewBox="0 0 24 24"><path d="M3 21l3-1 11-11-2-2L4 18l-1 3zM15 5l2 2"/></svg> Олівець
+        </button>
+        <button class="tool-btn chip chip-toggle" data-tool="arrow" aria-pressed="false" title="Стрілка (A)">
+          <svg class="ico" viewBox="0 0 24 24"><path d="M4 12h12"/><path d="M13 7l5 5-5 5"/></svg> Стрілка
+        </button>
+        <button class="tool-btn chip chip-toggle" data-tool="rect" aria-pressed="false" title="Прямокутник (R)">
+          <svg class="ico" viewBox="0 0 24 24"><rect x="4" y="6" width="16" height="12" rx="2"/></svg> Прямокутник
+        </button>
+        <button class="tool-btn chip chip-toggle" data-tool="circle" aria-pressed="false" title="Коло (C)">
+          <svg class="ico" viewBox="0 0 24 24"><circle cx="12" cy="12" r="6"/></svg> Коло
+        </button>
+      </div>
+    </div>
+
+    <!-- MIDDLE: Thickness + Zoom + Speed -->
+    <div class="panel">
+      <div class="section-title">Товщина</div>
+      <input id="widthRange" type="range" min="1" max="12" value="2" class="range-fat accent-blue-600">
+      <div class="text-xs text-gray-500">Товщина: <span id="widthVal">2</span></div>
+
+      <div class="section-title" style="margin-top:.15rem">Збільшення <span id="zoomPct" class="text-gray-500 text-xs">100%</span></div>
+      <input id="zoomRange" type="range" min="100" max="300" step="5" value="100" class="range-fat accent-blue-600">
+
+      <div class="section-title" style="margin-top:.15rem">Швидкість <span id="speedVal" class="text-gray-500 text-xs">1×</span></div>
+      <input id="speedRange" type="range" min="0.25" max="2" step="0.05" value="1" class="range-fat accent-blue-600">
+    </div>
+
+    <!-- RIGHT: Palette (narrow, filled) -->
+    <div class="panel">
+      <div class="flex items-center justify-between">
+        <div class="section-title">Колір</div>
+        <div class="flex items-center gap-2">
+          <div id="colorPreview" class="swatch" title="Поточний"></div>
+          <input id="colorPicker" type="color" value="#10b981" class="h-8 w-10 p-0 border rounded cursor-pointer" title="Піпетка">
+        </div>
+      </div>
+      <div id="palette" class="palette" role="radiogroup" aria-label="Палітра">
+        <!-- 30 кольорів (6×5) — заповнюють блок без «дір» -->
+        <!-- Row 1 -->
+        <button class="color-btn" role="radio" data-color="#ef4444" aria-checked="false" style="background:#ef4444"></button>
+        <button class="color-btn" role="radio" data-color="#dc2626" aria-checked="false" style="background:#dc2626"></button>
+        <button class="color-btn" role="radio" data-color="#e11d48" aria-checked="false" style="background:#e11d48"></button>
+        <button class="color-btn" role="radio" data-color="#f43f5e" aria-checked="false" style="background:#f43f5e"></button>
+        <button class="color-btn" role="radio" data-color="#f97316" aria-checked="false" style="background:#f97316"></button>
+        <button class="color-btn" role="radio" data-color="#fb923c" aria-checked="false" style="background:#fb923c"></button>
+        <!-- Row 2 -->
+        <button class="color-btn" role="radio" data-color="#f59e0b" aria-checked="false" style="background:#f59e0b"></button>
+        <button class="color-btn" role="radio" data-color="#fde047" aria-checked="false" style="background:#fde047"></button>
+        <button class="color-btn" role="radio" data-color="#a3e635" aria-checked="false" style="background:#a3e635"></button>
+        <button class="color-btn" role="radio" data-color="#84cc16" aria-checked="false" style="background:#84cc16"></button>
+        <button class="color-btn" role="radio" data-color="#22c55e" aria-checked="false" style="background:#22c55e"></button>
+        <button class="color-btn" role="radio" data-color="#16a34a" aria-checked="false" style="background:#16a34a"></button>
+        <!-- Row 3 -->
+        <button class="color-btn" role="radio" data-color="#10b981" aria-checked="true"  style="background:#10b981"></button>
+        <button class="color-btn" role="radio" data-color="#14b8a6" aria-checked="false" style="background:#14b8a6"></button>
+        <button class="color-btn" role="radio" data-color="#06b6d4" aria-checked="false" style="background:#06b6d4"></button>
+        <button class="color-btn" role="radio" data-color="#0ea5e9" aria-checked="false" style="background:#0ea5e9"></button>
+        <button class="color-btn" role="radio" data-color="#38bdf8" aria-checked="false" style="background:#38bdf8"></button>
+        <button class="color-btn" role="radio" data-color="#3b82f6" aria-checked="false" style="background:#3b82f6"></button>
+        <!-- Row 4 -->
+        <button class="color-btn" role="radio" data-color="#2563eb" aria-checked="false" style="background:#2563eb"></button>
+        <button class="color-btn" role="radio" data-color="#6366f1" aria-checked="false" style="background:#6366f1"></button>
+        <button class="color-btn" role="radio" data-color="#8b5cf6" aria-checked="false" style="background:#8b5cf6"></button>
+        <button class="color-btn" role="radio" data-color="#a855f7" aria-checked="false" style="background:#a855f7"></button>
+        <button class="color-btn" role="radio" data-color="#9333ea" aria-checked="false" style="background:#9333ea"></button>
+        <button class="color-btn" role="radio" data-color="#7c3aed" aria-checked="false" style="background:#7c3aed"></button>
+        <!-- Row 5 -->
+        <button class="color-btn" role="radio" data-color="#6d28d9" aria-checked="false" style="background:#6d28d9"></button>
+        <button class="color-btn" role="radio" data-color="#9a3412" aria-checked="false" style="background:#9a3412"></button>
+        <button class="color-btn" role="radio" data-color="#e5e7eb" aria-checked="false" style="background:#e5e7eb"></button>
+        <button class="color-btn" role="radio" data-color="#cbd5e1" aria-checked="false" style="background:#cbd5e1"></button>
+        <button class="color-btn" role="radio" data-color="#64748b" aria-checked="false" style="background:#64748b"></button>
+        <button class="color-btn" role="radio" data-color="#111827" aria-checked="false" style="background:#111827"></button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- SCENE -->
+  <div id="zoomHost" class="mb-2">
+    <div id="stage" class="draw-mode">
+      <video id="player" controls>
+        <source src="{{ video.video.url }}" type="video/mp4">
+        Твій браузер не підтримує відео.
+      </video>
+      <canvas id="annoCanvas"></canvas>
+    </div>
+  </div>
+
+  <div class="mt-1 text-sm text-gray-500">
+    <p id="hint">Режим: Лінія — клікни початок і кінець. Для керування відео — увімкни «Перегляд». Зум: слайдер або Ctrl/Alt + колесо.</p>
+  </div>
+</div>
+
+<script>
+(function(){
+  const player = document.getElementById('player');
+  const zoomHost = document.getElementById('zoomHost');
+  const stage  = document.getElementById('stage');
+  const canvas = document.getElementById('annoCanvas');
+  const ctx    = canvas.getContext('2d');
+
+  /* Controls */
+  const toolBtns   = Array.from(document.querySelectorAll('.tool-btn'));
+  const undoBtn    = document.getElementById('undoBtn');
+  const redoBtn    = document.getElementById('redoBtn');
+  const clearBtn   = document.getElementById('clearBtn');
+  const modeSwitch = document.getElementById('modeSwitch');
+  const angleBtn   = document.getElementById('angleLabelBtn');
+
+  const widthRange = document.getElementById('widthRange');
+  const widthVal   = document.getElementById('widthVal');
+  const zoomRange  = document.getElementById('zoomRange');
+  const zoomPct    = document.getElementById('zoomPct');
+  const speedRange = document.getElementById('speedRange');
+  const speedVal   = document.getElementById('speedVal');
+
+  const palette     = document.getElementById('palette');
+  const colorPicker = document.getElementById('colorPicker');
+  const colorPreview= document.getElementById('colorPreview');
+
+  const saveBtn    = document.getElementById('saveBtn');
+  const saveBadge  = document.getElementById('saveBadge');
+
+  const apiUrl = "{% url 'annotations_api' video.id %}";
+
+  /* State */
+  let tool   = 'line';
+  let color  = '#10b981';
+  let lineW  = 2;
+  let drawing= false;
+  let tempPts= [];
+  let hoverPt= null;
+  let shapes = [];
+  let zoom   = 1; /* 1..3 */
+  let showAngleLabels = true;
+  let isView = false;
+
+  const undoStack = [];
+  const redoStack = [];
+  const uid = () => 'id-' + Math.random().toString(36).slice(2,10);
+  const snapshot = () => JSON.parse(JSON.stringify(shapes));
+  const recordHistory = () => { undoStack.push(snapshot()); redoStack.length = 0; };
+
+  /* Zoom helpers */
+  const clamp = (v,a,b)=>Math.max(a,Math.min(b,v));
+  const clampZoom = z => clamp(z,1,3);
+  function setZoom(z, keepCenter=true){
+    const prev = zoom;
+    zoom = clampZoom(z);
+    const pct = Math.round(zoom*100);
+    zoomRange.value = pct;
+    zoomPct.textContent = pct + '%';
+
+    if (keepCenter){
+      const cx = zoomHost.scrollLeft + zoomHost.clientWidth/2;
+      const cy = zoomHost.scrollTop  + zoomHost.clientHeight/2;
+      const fx = cx / prev, fy = cy / prev;
+      stage.style.transform = `scale(${zoom})`;
+      fitCanvas();
+      zoomHost.scrollLeft = fx * zoom - zoomHost.clientWidth/2;
+      zoomHost.scrollTop  = fy * zoom - zoomHost.clientHeight/2;
+    } else {
+      stage.style.transform = `scale(${zoom})`;
+      fitCanvas();
+    }
+  }
+  zoomRange.addEventListener('input', ()=> setZoom(parseInt(zoomRange.value,10)/100));
+  zoomHost.addEventListener('wheel', (e)=>{
+    if (!(e.ctrlKey || e.altKey)) return;
+    e.preventDefault();
+    setZoom( zoom + (e.deltaY<0? 0.1 : -0.1) );
+  }, {passive:false});
+
+  /* Speed */
+  speedRange.addEventListener('input', ()=>{
+    const v = parseFloat(speedRange.value);
+    player.playbackRate = v;
+    speedVal.textContent = v.toFixed(2).replace(/\.00$/,'') + '×';
+  });
+
+  /* View / Edit */
+  modeSwitch.addEventListener('change', ()=>{
+    isView = modeSwitch.checked;  /* checked => Перегляд */
+    applyInteractionMode();
+  });
+  function applyInteractionMode(){
+    if (isView){ stage.classList.remove('draw-mode'); canvas.style.pointerEvents='none';  player.controls=true; }
+    else       { stage.classList.add   ('draw-mode'); canvas.style.pointerEvents='auto'; player.controls=false;}
+    document.getElementById('hint').textContent =
+      isView ? 'Режим: Перегляд — кліки керують відео. Зум: Ctrl/Alt + колесо.' :
+               (tool==='angle' ? 'Режим: Кут — три кліки: точка → вершина → точка.' :
+                tool==='freehand' ? 'Режим: Олівець — затисни й малюй.' :
+                tool==='arrow' ? 'Режим: Стрілка — клікни початок і кінець.' :
+                tool==='rect' ? 'Режим: Прямокутник — перетягни з кутка.' :
+                tool==='circle' ? 'Режим: Коло — потягни для радіуса.' :
+                'Режим: Лінія — клікни початок і кінець.');
+  }
+
+  /* Angle labels */
+  angleBtn.addEventListener('click', ()=>{
+    const cur = angleBtn.getAttribute('aria-pressed') === 'true';
+    angleBtn.setAttribute('aria-pressed', String(!cur));
+    showAngleLabels = !cur;
+    redraw();
+  });
+
+  /* Tools */
+  function setActiveTool(next){
+    tool = next;
+    toolBtns.forEach(b=> b.setAttribute('aria-pressed', String(b.dataset.tool===tool)));
+    tempPts=[]; hoverPt=null;
+    applyInteractionMode(); redraw();
+  }
+  toolBtns.forEach(btn=> btn.addEventListener('click', ()=> setActiveTool(btn.dataset.tool)));
+
+  /* Sizing / canvas */
+  function fitCanvas(){
+    const rect = player.getBoundingClientRect();
+    const cssW = Math.max(1, Math.round(rect.width / zoom));
+    const cssH = Math.max(1, Math.round(rect.height / zoom));
+    canvas.style.width  = cssW+'px';
+    canvas.style.height = cssH+'px';
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width  = Math.round(cssW*dpr);
+    canvas.height = Math.round(cssH*dpr);
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+    redraw();
+  }
+  const cssSize=()=>({w:canvas.clientWidth,h:canvas.clientHeight});
+  const absToNorm=(x,y)=>{const{w,h}=cssSize();return{x:x/w,y:y/h}};
+  const normToAbs=(nx,ny)=>{ const {w,h}=cssSize(); return {x:nx*w,y:ny*h}; };
+
+  /* Angle label */
+  function drawAngleLabel(b,a,c){
+    const v1={x:a.x-b.x,y:a.y-b.y}, v2={x:c.x-b.x,y:c.y-b.y};
+    const dot=v1.x*v2.x+v1.y*v2.y, m1=Math.hypot(v1.x,v1.y), m2=Math.hypot(v2.x,v2.y);
+    const ang=(m1>0&&m2>0)?Math.acos(Math.min(1,Math.max(-1,dot/(m1*m2)))):0;
+    const deg=(ang*180/Math.PI).toFixed(1);
+    const tx=b.x+6, ty=b.y-6;
+    ctx.save();
+    ctx.font='12px system-ui,sans-serif';
+    const text = `${deg}°`;
+    const w = ctx.measureText(text).width + 8;
+    if (ctx.roundRect){ ctx.fillStyle='rgba(255,255,255,.9)'; ctx.strokeStyle='rgba(0,0,0,.15)'; ctx.lineWidth=1; ctx.beginPath(); ctx.roundRect(tx-4, ty-14, w, 16, 6); ctx.fill(); ctx.stroke();}
+    else{ ctx.fillStyle='rgba(255,255,255,.9)'; ctx.fillRect(tx-4, ty-14, w, 16); }
+    ctx.fillStyle='#111827'; ctx.fillText(text, tx, ty-2);
+    ctx.restore();
+  }
+
+  /* Arrowhead uses shape's own width */
+  function drawArrow(p0, p1, widthForHead){
+    ctx.beginPath(); ctx.moveTo(p0.x,p0.y); ctx.lineTo(p1.x,p1.y); ctx.stroke();
+    const ang=Math.atan2(p1.y-p0.y,p1.x-p0.x);
+    const L=Math.max(8, (widthForHead||2) * 4);
+    const a=Math.PI/7;
+    ctx.beginPath();
+    ctx.moveTo(p1.x,p1.y);
+    ctx.lineTo(p1.x-L*Math.cos(ang-a), p1.y-L*Math.sin(ang-a));
+    ctx.moveTo(p1.x,p1.y);
+    ctx.lineTo(p1.x-L*Math.cos(ang+a), p1.y-L*Math.sin(ang+a));
+    ctx.stroke();
+  }
+
+  function drawShape(s){
+    ctx.lineWidth = s.width||2; ctx.strokeStyle = s.color||'#10b981'; ctx.fillStyle=ctx.strokeStyle;
+    ctx.lineJoin='round'; ctx.lineCap='round';
+
+    if (s.type==='line' && s.pts.length>=2){
+      const p0=normToAbs(s.pts[0].x,s.pts[0].y), p1=normToAbs(s.pts[1].x,s.pts[1].y);
+      ctx.beginPath(); ctx.moveTo(p0.x,p0.y); ctx.lineTo(p1.x,p1.y); ctx.stroke();
+    }
+    if (s.type==='arrow' && s.pts.length>=2){
+      const p0=normToAbs(s.pts[0].x,s.pts[0].y), p1=normToAbs(s.pts[1].x,s.pts[1].y);
+      drawArrow(p0,p1, s.width||2);
+    }
+    if (s.type==='rect' && s.pts.length>=2){
+      const a=normToAbs(s.pts[0].x,s.pts[0].y), b=normToAbs(s.pts[1].x,s.pts[1].y);
+      const x=Math.min(a.x,b.x), y=Math.min(a.y,b.y), w=Math.abs(a.x-b.x), h=Math.abs(a.y-b.y);
+      ctx.strokeRect(x,y,w,h);
+    }
+    if (s.type==='circle' && s.pts.length>=2){
+      const c=normToAbs(s.pts[0].x,s.pts[0].y), e=normToAbs(s.pts[1].x,s.pts[1].y);
+      const r=Math.hypot(e.x-c.x,e.y-c.y);
+      ctx.beginPath(); ctx.arc(c.x,c.y,r,0,Math.PI*2); ctx.stroke();
+    }
+    if (s.type==='angle' && s.pts.length>=2){
+      const a=normToAbs(s.pts[0].x,s.pts[0].y), b=normToAbs(s.pts[1].x,s.pts[1].y);
+      ctx.beginPath(); ctx.moveTo(b.x,b.y); ctx.lineTo(a.x,a.y);
+      if (s.pts[2]){ const c=normToAbs(s.pts[2].x,s.pts[2].y); ctx.moveTo(b.x,b.y); ctx.lineTo(c.x,c.y); }
+      ctx.stroke();
+      if (showAngleLabels && s.pts[2]){ const c=normToAbs(s.pts[2].x,s.pts[2].y); drawAngleLabel(b,a,c); }
+    }
+    if (s.type==='freehand' && s.pts.length>=2){
+      ctx.beginPath(); const p0=normToAbs(s.pts[0].x,s.pts[0].y); ctx.moveTo(p0.x,p0.y);
+      for (let i=1;i<s.pts.length;i++){ const p=normToAbs(s.pts[i].x,s.pts[i].y); ctx.lineTo(p.x,p.y); } ctx.stroke();
+    }
+  }
+  function redraw(){
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    shapes.forEach(drawShape);
+    if (tempPts.length){
+      const preview={type:tool, pts:tempPts.slice(), color, width:lineW};
+      if (hoverPt){
+        if (tool==='angle') preview.pts=[...tempPts, hoverPt].slice(0,3);
+        if (['rect','circle','arrow','line'].includes(tool)){
+          if (preview.pts.length===1) preview.pts.push(hoverPt); else preview.pts[1]=hoverPt;
+        }
+      }
+      drawShape(preview);
+    }
+  }
+
+  /* Color */
+  function setColor(hex){
+    color=hex; colorPreview.style.background=hex; colorPicker.value=hex;
+    Array.from(palette.querySelectorAll('.color-btn')).forEach(b=>{
+      b.setAttribute('aria-checked', String(b.dataset.color?.toLowerCase()===hex.toLowerCase()));
+    });
+    redraw(); markDirty();
+  }
+  palette.addEventListener('click', (e)=>{ const b=e.target.closest('.color-btn'); if(b) setColor(b.dataset.color); });
+  colorPicker.addEventListener('input', (e)=> setColor(e.target.value));
+
+  /* Thickness */
+  widthRange.addEventListener('input', ()=>{
+    lineW=parseInt(widthRange.value,10)||2;
+    widthVal.textContent=lineW;
+    redraw();
+  });
+
+  /* Pointer events */
+  function getLocalPos(evt){
+    const rect = canvas.getBoundingClientRect();
+    const x = (evt.clientX ?? evt.touches?.[0]?.clientX) - rect.left;
+    const y = (evt.clientY ?? evt.touches?.[0]?.clientY) - rect.top;
+    const unscaledX = x / zoom, unscaledY = y / zoom;
+    return {x: unscaledX, y: unscaledY};
+  }
+  function onDown(e){
+    if (isView) return;
+    const {x,y}=getLocalPos(e); const n=absToNorm(x,y);
+    if (tool==='angle'){
+      if (tempPts.length<2){ tempPts.push(n); } else {
+        recordHistory();
+        shapes.push({id:uid(), type:'angle', pts:[tempPts[0], tempPts[1], n], color, width:lineW});
+        tempPts=[]; hoverPt=null; markDirty(); redraw();
+      }
+      return;
+    }
+    drawing = ['freehand','line','arrow','rect','circle'].includes(tool);
+    tempPts=[n]; hoverPt=null; redraw();
+  }
+  function onMove(e){
+    if (isView) return;
+    const {x,y}=getLocalPos(e); const n=absToNorm(x,y);
+    if (tool==='angle'){ hoverPt=n; redraw(); return; }
+    if (!drawing) return;
+    if (tool==='freehand'){ tempPts.push(n); hoverPt=null; } else { hoverPt=n; }
+    redraw();
+  }
+  function onUp(){
+    if (isView || tool==='angle') return;
+    if (!drawing) return; drawing=false;
+    if (tool==='freehand' && tempPts.length>=2){
+      recordHistory();
+      shapes.push({id:uid(), type:'freehand', pts:tempPts.slice(), color, width:lineW});
+    }
+    if (['line','arrow','rect','circle'].includes(tool) && tempPts.length>=1 && hoverPt){
+      recordHistory();
+      shapes.push({id:uid(), type:tool, pts:[tempPts[0], hoverPt], color, width:lineW});
+    }
+    tempPts=[]; hoverPt=null; redraw(); markDirty();
+  }
+  const on = (el,ev,fn,opts={})=>el.addEventListener(ev,fn,{...opts,passive:false});
+  on(canvas,'pointerdown',onDown);
+  on(canvas,'pointermove',onMove);
+  on(canvas,'pointerup',onUp);
+  on(canvas,'pointerleave',()=>{ hoverPt=null; redraw(); });
+
+  /* Undo/Redo/Clear */
+  undoBtn.addEventListener('click', ()=>{
+    if (!undoStack.length) return;
+    redoStack.push(snapshot());
+    shapes = undoStack.pop();
+    tempPts=[]; hoverPt=null;
+    redraw(); markDirty();
+  });
+  redoBtn.addEventListener('click', ()=>{
+    if (!redoStack.length) return;
+    undoStack.push(snapshot());
+    shapes = redoStack.pop();
+    tempPts=[]; hoverPt=null;
+    redraw(); markDirty();
+  });
+  clearBtn.addEventListener('click', ()=>{
+    if (!shapes.length) return;
+    if (!confirm('Очистити всі анотації?')) return;
+    recordHistory();
+    shapes=[]; tempPts=[]; hoverPt=null;
+    redraw(); markDirty();
+  });
+
+   /* Save */
+  function getCookie(name){
+    const m = document.cookie.match('(^|;)\\s*' + name + '\\s*=\\s*([^;]+)');
+    return m ? m.pop() : '';
+  }
+  const csrftoken =
+    document.querySelector('input[name=csrfmiddlewaretoken]')?.value || getCookie('csrftoken');
+
+  function markDirty(){
+    saveBtn.disabled = false;
+    saveBadge.classList.add('hidden');
+  }
+
+  async function doSave(){
+    try{
+      saveBtn.disabled = true;
+      const res = await fetch(apiUrl, {
+        method: 'POST',
+        credentials: 'same-origin', // важливо для кукі CSRF
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': csrftoken
+        },
+        body: JSON.stringify({ shapes })
+      });
+
+      let data = {};
+      try { data = await res.json(); } catch(_) {}
+
+      if (!res.ok || data?.ok === false){
+        throw new Error(data?.detail || data?.error || 'Save failed');
+      }
+
+      saveBadge.classList.remove('hidden');
+      setTimeout(() => saveBadge.classList.add('hidden'), 1200);
+    } catch(err){
+      alert('Помилка збереження: ' + err.message);
+      saveBtn.disabled = false;
+    }
+  }
+
+  saveBtn.addEventListener('click', doSave);
+  window.addEventListener('beforeunload', (e) => {
+    if (!saveBtn.disabled){ e.preventDefault(); e.returnValue = ''; }
+  });
+
+
+  /* Keyboard */
+  window.addEventListener('keydown', (e)=>{
+    const k=e.key.toLowerCase();
+    if ((e.ctrlKey||e.metaKey) && k==='s'){ e.preventDefault(); doSave(); }
+    if ((e.ctrlKey||e.metaKey) && k==='z'){ e.preventDefault(); undoBtn.click(); }
+    if ((e.ctrlKey||e.metaKey) && k==='y'){ e.preventDefault(); redoBtn.click(); }
+    if (isView) return;
+    if (k==='l') setActiveTool('line');
+    if (k==='k') setActiveTool('angle');
+    if (k==='p') setActiveTool('freehand');
+    if (k==='a') setActiveTool('arrow');
+    if (k==='r') setActiveTool('rect');
+    if (k==='c') setActiveTool('circle');
+  });
+
+  /* Load existing shapes */
+  async function loadAnnotations(){
+    try{
+      const res = await fetch(apiUrl, {credentials:'same-origin'});
+      const data = await res.json();
+      shapes = Array.isArray(data?.shapes) ? data.shapes : [];
+      redraw();
+    }catch{}
+  }
+
+  function init(){
+    setActiveTool('line');
+    const def='#10b981'; colorPreview.style.background=def;
+    widthVal.textContent = 2;
+    speedVal.textContent = '1×';
+    angleBtn.setAttribute('aria-pressed','true');
+    modeSwitch.checked = false; isView=false; applyInteractionMode();
+    setZoom(1,false);
+
+    const ro1=new ResizeObserver(fitCanvas); ro1.observe(zoomHost);
+    const ro2=new ResizeObserver(fitCanvas); ro2.observe(player);
+    player.addEventListener('loadedmetadata', ()=>{ setZoom(1,false); loadAnnotations(); });
+    window.addEventListener('resize', ()=> setZoom(zoom,false));
+  }
+  init();
+})();
+</script>
+{% endblock %}

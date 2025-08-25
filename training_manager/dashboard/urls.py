@@ -1,3 +1,4 @@
+# training_manager/dashboard/urls.py
 from django.urls import path
 from . import views
 
@@ -6,9 +7,9 @@ urlpatterns = [
     path("", views.index, name="index"),
     path("login/", views.login_request_code, name="login"),
     path("verify-otp/", views.verify_code, name="verify_code"),
-    path("set-language/", views.settings_view, name="set_language"),  # якщо маєш окремий set_language, лиши його
+    path("set-language/", views.settings_view, name="set_language"),
 
-    # --- Приватні (доступ під логіном; декоратори вже у views.py) ---
+    # --- Приватні ---
     path("home/", views.dashboard_home, name="home"),
     path("upload/", views.upload, name="upload"),
     path("library/", views.library_view, name="library"),
@@ -18,11 +19,17 @@ urlpatterns = [
     # --- Категорії ---
     path("category/edit/<int:category_id>/", views.edit_category, name="edit_category"),
     path("category/delete/<int:category_id>/", views.delete_category, name="delete_category"),
+    path("library/category/<int:pk>/", views.category_detail, name="category_detail"),
 
     # --- Відео ---
     path("video/edit/<int:video_id>/", views.edit_video, name="edit_video"),
     path("video/delete/<int:video_id>/", views.delete_video, name="delete_video"),
 
-    # --- Debug endpoints (RSS only) ---
+    # --- Анотації ---
+    path("annotations/", views.annotations_list, name="annotations_list"),
+    path("annotate/<int:video_id>/", views.annotate_video, name="annotate_video"),
+    path("api/videos/<int:video_id>/annotations/", views.annotations_api, name="annotations_api"),
+
+    # --- Debug ---
     path("debug/news", views.debug_news, name="debug_news"),
 ]

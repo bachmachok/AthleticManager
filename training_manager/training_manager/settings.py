@@ -1,4 +1,5 @@
 from pathlib import Path
+from datetime import timedelta
 import os
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -26,6 +27,9 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "dashboard",
+
+    # --- JWT: блэкліст refresh токенів (міграція обов’язкова) ---
+    "rest_framework_simplejwt.token_blacklist",
 ]
 
 MIDDLEWARE = [
@@ -132,9 +136,37 @@ SPORT_NEWS_FEEDS = [
     "http://feeds.bbci.co.uk/sport/athletics/rss.xml",
 ]
 
-# --- Безпека для продакшена (опціонально) ---
+# --- Безпека / проксі ---
 CSRF_TRUSTED_ORIGINS = [o for o in os.getenv("CSRF_TRUSTED_ORIGINS", "").split(",") if o.strip()]
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https") if os.getenv("ENABLE_PROXY_SSL", "False") == "True" else None
+
+# --- JWT (SimpleJWT) ---
+SIMPLE_JWT = {
+    # Можеш керувати через .env: JWT_ACCESS_MINUTES, JWT_REFRESH_DAYS
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=int(os.getenv("JWT_ACCESS_MINUTES", "30"))),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=int(os.getenv("JWT_REFRESH_DAYS", "7"))),
+    "ROTATE_REFRESH_TOKENS": True,
+    "BLACKLIST_AFTER_ROTATION": True,
+    # SIGNING_KEY за замовчуванням SECRET_KEY; ALGORITHM = 'HS256'
+}
+
+# --- Cookie-політики (щоб JWT у HttpOnly-куках були коректні) ---
+# У продакшені (DEBUG=False) ввімкнути secure
+SESSION_COOKIE_SECURE = not DEBUG
+CSRF_COOKIE_SECURE = not DEBUG
+
+# Для редіректів із ?next= і форм підходить Lax; можеш змінити на 'Strict' за потреби
+SESSION_COOKIE_SAMESITE = os.getenv("SESSION_COOKIE_SAMESITE", "Lax")
+CSRF_COOKIE_SAMESITE = os.getenv("CSRF_COOKIE_SAMESITE", "Lax")
+
+# CSRF cookie має бути доступна JS (щоб твій fetch брав csrftoken); за замовчуванням False — залишаємо
+# CSRF_COOKIE_HTTPONLY = False
+
+# Додатково для продакшена (опційно через .env, не ламає дев):
+SECURE_SSL_REDIRECT = os.getenv("SECURE_SSL_REDIRECT", "False") == "True"
+SECURE_HSTS_SECONDS = int(os.getenv("SECURE_HSTS_SECONDS", "0"))
+SECURE_HSTS_INCLUDE_SUBDOMAINS = os.getenv("SECURE_HSTS_INCLUDE_SUBDOMAINS", "False") == "True"
+SECURE_HSTS_PRELOAD = os.getenv("SECURE_HSTS_PRELOAD", "False") == "True"
 
 # --- Логи ---
 LOGGING = {

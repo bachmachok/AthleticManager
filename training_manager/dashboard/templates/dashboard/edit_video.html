@@ -2,54 +2,158 @@
 {% block title %}Редагувати відео — Athletic Manager{% endblock %}
 
 {% block content %}
-  <h1 class="text-2xl md:text-3xl font-semibold tracking-tight mb-6">
-    🎞️ Редагувати відео проби
-  </h1>
+  <h1 class="hidden" aria-hidden="true">Редагувати відео</h1>
 
-  <article class="card max-w-2xl">
-    <form method="post" enctype="multipart/form-data" novalidate class="space-y-5">
-      {% csrf_token %}
+  <div class="mx-auto w-full max-w-[920px]">
+    <article class="card">
+      <header class="px-6 pt-6 pb-3 border-b border-gray-200 dark:border-white/10">
+        <h2 class="text-xl md:text-2xl font-semibold flex items-center gap-2">
+          🎞️ Редагувати відео спроби
+        </h2>
+      </header>
 
-      {% if form.non_field_errors %}
-        <div class="rounded-lg bg-red-50 text-red-700 px-3 py-2 text-sm dark:bg-red-900/20 dark:text-red-300">
-          {% for err in form.non_field_errors %}
-            <div>{{ err }}</div>
-          {% endfor %}
-        </div>
-      {% endif %}
+      <form method="post" enctype="multipart/form-data" novalidate>
+        {% csrf_token %}
 
-      {% for field in form %}
-        <div class="space-y-1.5">
-          <label for="{{ field.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-200">
-            {{ field.label }}{% if field.field.required %}<span class="text-red-600">*</span>{% endif %}
-          </label>
-
-          <div class="max-w-full">
-            {{ field }}
+        {% if form.non_field_errors %}
+          <div class="px-6 pt-4">
+            <div class="rounded-lg bg-red-50 text-red-700 px-3 py-2 text-sm dark:bg-red-900/20 dark:text-red-300">
+              {% for err in form.non_field_errors %}<div>{{ err }}</div>{% endfor %}
+            </div>
           </div>
+        {% endif %}
 
-          {% if field.help_text %}
-            <p class="text-xs text-gray-500 dark:text-gray-400">{{ field.help_text }}</p>
-          {% endif %}
+        <div class="p-6">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 
-          {% if field.errors %}
-            <ul class="text-xs text-red-600 dark:text-red-400 space-y-0.5">
-              {% for err in field.errors %}
-                <li>{{ err }}</li>
-              {% endfor %}
-            </ul>
-          {% endif %}
+            <div>
+              <label for="{{ form.category.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+                {{ form.category.label }} <span class="text-red-600">*</span>
+              </label>
+              {{ form.category }}
+              {% if form.category.errors %}
+                <ul class="mt-1 text-xs text-red-600 dark:text-red-400 space-y-0.5">
+                  {% for err in form.category.errors %}<li>{{ err }}</li>{% endfor %}
+                </ul>
+              {% endif %}
+            </div>
+
+            <div>
+              <label for="{{ form.event_type.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+                {{ form.event_type.label }} <span class="text-red-600">*</span>
+              </label>
+              {{ form.event_type }}
+              {% if form.event_type.errors %}
+                <ul class="mt-1 text-xs text-red-600 dark:text-red-400 space-y-0.5">
+                  {% for err in form.event_type.errors %}<li>{{ err }}</li>{% endfor %}
+                </ul>
+              {% endif %}
+            </div>
+
+            <div>
+              <label for="{{ form.result.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+                {{ form.result.label }}
+                <span id="unit-badge" class="inline-block align-middle ml-1 text-[11px] px-1.5 py-0.5 rounded bg-gray-200 dark:bg-white/10">—</span>
+              </label>
+              {{ form.result }}
+              {% if form.result.errors %}
+                <ul class="mt-1 text-xs text-red-600 dark:text-red-400 space-y-0.5">
+                  {% for err in form.result.errors %}<li>{{ err }}</li>{% endfor %}
+                </ul>
+              {% endif %}
+            </div>
+
+            <div>
+              <label for="{{ form.attempt_number.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+                {{ form.attempt_number.label }}
+              </label>
+              {{ form.attempt_number }}
+              {% if form.attempt_number.errors %}
+                <ul class="mt-1 text-xs text-red-600 dark:text-red-400 space-y-0.5">
+                  {% for err in form.attempt_number.errors %}<li>{{ err }}</li>{% endfor %}
+                </ul>
+              {% endif %}
+            </div>
+
+            <div id="pip-wrapper">
+              <label for="{{ form.place_in_protocol.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+                {{ form.place_in_protocol.label }} <span id="pip-required" class="text-red-600" style="display:none">*</span>
+              </label>
+              {{ form.place_in_protocol }}
+              {% if form.place_in_protocol.errors %}
+                <ul class="mt-1 text-xs text-red-600 dark:text-red-400 space-y-0.5">
+                  {% for err in form.place_in_protocol.errors %}<li>{{ err }}</li>{% endfor %}
+                </ul>
+              {% endif %}
+            </div>
+
+            <div>
+              <label for="{{ form.time.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+                {{ form.time.label }}
+              </label>
+              {{ form.time }}
+              {% if form.time.errors %}
+                <ul class="mt-1 text-xs text-red-600 dark:text-red-400 space-y-0.5">
+                  {% for err in form.time.errors %}<li>{{ err }}</li>{% endfor %}
+                </ul>
+              {% endif %}
+            </div>
+
+            <div class="md:col-span-2">
+              <label for="{{ form.video.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+                {{ form.video.label }} <span class="text-red-600">*</span>
+              </label>
+              {{ form.video }}
+              {% if form.video.errors %}
+                <ul class="mt-1 text-xs text-red-600 dark:text-red-400 space-y-0.5">
+                  {% for err in form.video.errors %}<li>{{ err }}</li>{% endfor %}
+                </ul>
+              {% endif %}
+            </div>
+
+          </div>
         </div>
-      {% endfor %}
 
-      <div class="pt-2 flex items-center gap-3">
-        <button type="submit" class="btn btn-primary">
-          Зберегти зміни
-        </button>
-        <a href="{% url 'upload' %}" class="btn btn-ghost">
-          Відмінити
-        </a>
-      </div>
-    </form>
-  </article>
+        <footer class="px-6 pb-6 pt-3 border-t border-gray-200 dark:border-white/10 flex items-center justify-end gap-3">
+          <a href="{% url 'upload' %}" class="btn btn-ghost btn-sm">Відмінити</a>
+          <button type="submit" class="btn btn-primary btn-sm">Зберегти зміни</button>
+        </footer>
+      </form>
+    </article>
+  </div>
+
+  {% if categories_meta %}{{ categories_meta|json_script:"categories-meta" }}{% endif %}
+
+  <script>
+    (function () {
+      // одиниці «с/м» біля результату
+      const eventSel = document.getElementById('id_event_type');
+      const unit = document.getElementById('unit-badge');
+      function updateUnit(){ if(unit) unit.textContent = (eventSel?.value === 'run') ? 'с' : 'м'; }
+      eventSel?.addEventListener('change', updateUnit); updateUnit();
+
+      // показувати «Місце в протоколі» тільки для змагальних
+      const catSel = document.getElementById('id_category');
+      const pipWrap = document.getElementById('pip-wrapper');
+      const pipInp  = document.getElementById('id_place_in_protocol');
+      const pipReq  = document.getElementById('pip-required');
+
+      let typeById = {};
+      const meta = document.getElementById('categories-meta');
+      if (meta) {
+        try { JSON.parse(meta.textContent).forEach(x => typeById[String(x.id)] = x.attempt_type); } catch (e) {}
+      }
+
+      function togglePip(){
+        if (!catSel || !pipWrap) return;
+        const isComp = typeById[String(catSel.value || '')] === 'competition';
+        pipWrap.style.display = isComp ? '' : 'none';
+        if (pipInp) isComp ? pipInp.setAttribute('required','required') : pipInp.removeAttribute('required');
+        if (pipReq) pipReq.style.display = isComp ? '' : 'none';
+      }
+
+      catSel?.addEventListener('change', togglePip);
+      togglePip();
+    })();
+  </script>
 {% endblock %}

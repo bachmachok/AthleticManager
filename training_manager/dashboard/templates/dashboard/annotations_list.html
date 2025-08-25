@@ -1,0 +1,30 @@
+{% extends "dashboard/base.html" %}
+{% block content %}
+<h1>Анотації</h1>
+<table class="table">
+  <thead>
+    <tr>
+      <th>Дата</th>
+      <th>Місце</th>
+      <th>Дисципліна</th>
+      <th>Спроба</th>
+      <th>Дія</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for video in videos %}
+    <tr>
+      <td>{{ video.category.date }}</td>
+      <td>{{ video.category.place }}</td>
+      <td>{{ video.get_event_type_display }}</td>
+      <td>#{{ video.attempt_number }}</td>
+      <td>
+        <a class="btn btn-sm" href="{% url 'annotate_video' video.id %}">Анотувати</a>
+      </td>
+    </tr>
+    {% empty %}
+    <tr><td colspan="5">Поки що немає відео.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

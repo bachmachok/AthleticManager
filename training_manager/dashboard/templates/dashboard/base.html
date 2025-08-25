@@ -80,6 +80,12 @@
         <span class="nav-text">Завантаження</span>
         <span class="nav-under hidden">Завантаження</span>
       </a>
+
+      <a href="{% url 'annotations_list' %}" class="nav-link {% if current in 'annotations_list,annotate_video' %}nav-link-active{% endif %}">
+        <span class="nav-icon">🖊️</span>
+        <span class="nav-text">Анотації</span>
+        <span class="nav-under hidden">Анотації</span>
+      </a>
       <a href="{% url 'settings' %}" class="nav-link {% if current == 'settings' %}nav-link-active{% endif %}">
         <span class="nav-icon">⚙️</span>
         <span class="nav-text">Налаштування</span>

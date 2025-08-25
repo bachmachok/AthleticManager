@@ -1,0 +1,309 @@
+{# training_manager/dashboard/templates/dashboard/category_detail.html #}
+{% extends "dashboard/base.html" %}
+{% load static %}
+
+{% block title %}Категорія — {{ category.get_attempt_type_display }} ({{ category.place }}, {{ category.date }}){% endblock %}
+
+{% block content %}
+
+<style>
+  /* ===== Segmented controls (пігулки) ===== */
+  .seg {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 8px;
+    border-radius: 12px;
+    background: var(--seg-bg, #f8fafc);
+  }
+  .dark .seg { --seg-bg: rgba(255,255,255,.06); }
+
+  .seg__item {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: .5rem;
+    padding: 10px 14px;
+    border-radius: 999px;
+    font-size: .9rem;
+    font-weight: 600;
+    cursor: pointer;
+    user-select: none;
+    background: #fff;
+    border: 1px solid rgba(15,23,42,.08);
+    transition: box-shadow .15s ease, transform .06s ease, background .15s ease, color .15s ease;
+  }
+  .dark .seg__item {
+    background: rgba(255,255,255,.04);
+    border-color: rgba(255,255,255,.08);
+  }
+  .seg__item:hover { transform: translateY(-1px); }
+
+  .seg__item input {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .seg__item--active {
+    background: #1e49ff;
+    color: #fff;
+    border-color: transparent;
+    box-shadow: 0 6px 18px rgba(30,73,255,.35);
+  }
+  .seg__item--disabled {
+    opacity: .5;
+    pointer-events: none;
+  }
+
+  .seg__icon {
+    font-size: 1rem;
+    line-height: 1;
+  }
+
+  .filters-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+  @media (min-width: 860px) {
+    .filters-grid {
+      grid-template-columns: 1fr 2fr auto;
+      align-items: center;
+    }
+  }
+</style>
+
+  <div class="flex items-center justify-between mb-6">
+    <h1 class="text-2xl md:text-3xl font-semibold tracking-tight">
+      🗂️ {{ category.get_attempt_type_display }} — {{ category.place }} — {{ category.date }}
+    </h1>
+    <a href="{% url 'library' %}" class="btn">⬅️ До бібліотеки</a>
+  </div>
+
+  <article class="card mb-6">
+    <form id="filters-form" method="get" class="card-body filters-grid">
+
+      {# Дисципліна як сегментні пігулки #}
+      <fieldset>
+        <legend class="mb-2 text-sm font-medium text-gray-700 dark:text-gray-200">Дисципліна</legend>
+        <div class="seg" id="seg-event">
+          {# значення беремо з контексту filter_event #}
+          <label class="seg__item {% if not filter_event %}seg__item--active{% endif %}">
+            <span class="seg__icon">✨</span> Усі
+            <input type="radio" name="event" value="" {% if not filter_event %}checked{% endif %}>
+          </label>
+
+          <label class="seg__item {% if filter_event == 'run' %}seg__item--active{% endif %}">
+            <span class="seg__icon">🏃</span> Біг
+            <input type="radio" name="event" value="run" {% if filter_event == 'run' %}checked{% endif %}>
+          </label>
+
+          <label class="seg__item {% if filter_event == 'jump' %}seg__item--active{% endif %}">
+            <span class="seg__icon">🦘</span> Стрибки
+            <input type="radio" name="event" value="jump" {% if filter_event == 'jump' %}checked{% endif %}>
+          </label>
+
+          <label class="seg__item {% if filter_event == 'throw' %}seg__item--active{% endif %}">
+            <span class="seg__icon">🥏</span> Метання/Штовхання
+            <input type="radio" name="event" value="throw" {% if filter_event == 'throw' %}checked{% endif %}>
+          </label>
+        </div>
+      </fieldset>
+
+      {# Сортування як сегментні пігулки (без "місця") #}
+      <fieldset>
+        <legend class="mb-2 text-sm font-medium text-gray-700 dark:text-gray-200">Сортування</legend>
+        <div class="seg" id="seg-sort">
+          <label class="seg__item {% if sort == 'attempt_asc' %}seg__item--active{% endif %}">
+            <span class="seg__icon">#↑</span> № спроби
+            <input type="radio" name="sort" value="attempt_asc" {% if sort == 'attempt_asc' %}checked{% endif %}>
+          </label>
+          <label class="seg__item {% if sort == 'attempt_desc' %}seg__item--active{% endif %}">
+            <span class="seg__icon">#↓</span> № спроби
+            <input type="radio" name="sort" value="attempt_desc" {% if sort == 'attempt_desc' %}checked{% endif %}>
+          </label>
+
+          <label class="seg__item {% if sort == 'time_asc' %}seg__item--active{% endif %}">
+            <span class="seg__icon">⏱↑</span> Час
+            <input type="radio" name="sort" value="time_asc" {% if sort == 'time_asc' %}checked{% endif %}>
+          </label>
+          <label class="seg__item {% if sort == 'time_desc' %}seg__item--active{% endif %}">
+            <span class="seg__icon">⏱↓</span> Час
+            <input type="radio" name="sort" value="time_desc" {% if sort == 'time_desc' %}checked{% endif %}>
+          </label>
+
+          {# результат — розумний, але доступний тільки якщо обрана конкретна дисципліна #}
+          {% with has_event=filter_event|yesno:"1,," %}
+            <label class="seg__item {% if sort == 'result_best' %}seg__item--active{% endif %} {% if not filter_event %}seg__item--disabled{% endif %}">
+              <span class="seg__icon">⭐</span> Результат (кращий)
+              <input type="radio" name="sort" value="result_best" {% if sort == 'result_best' %}checked{% endif %} {% if not filter_event %}disabled{% endif %}>
+            </label>
+            <label class="seg__item {% if sort == 'result_worst' %}seg__item--active{% endif %} {% if not filter_event %}seg__item--disabled{% endif %}">
+              <span class="seg__icon">⬇</span> Результат (гірший)
+              <input type="radio" name="sort" value="result_worst" {% if sort == 'result_worst' %}checked{% endif %} {% if not filter_event %}disabled{% endif %}>
+            </label>
+          {% endwith %}
+
+          <label class="seg__item {% if sort == 'created_desc' %}seg__item--active{% endif %}">
+            <span class="seg__icon">🆕</span> Додані — новіші
+            <input type="radio" name="sort" value="created_desc" {% if sort == 'created_desc' %}checked{% endif %}>
+          </label>
+          <label class="seg__item {% if sort == 'created_asc' %}seg__item--active{% endif %}">
+            <span class="seg__icon">📅</span> Додані — старіші
+            <input type="radio" name="sort" value="created_asc" {% if sort == 'created_asc' %}checked{% endif %}>
+          </label>
+        </div>
+
+        {# підказка без дужок у if #}
+        {% if not filter_event and sort == 'result_best' or not filter_event and sort == 'result_worst' %}
+          <p class="mt-2 text-xs text-amber-600 dark:text-amber-400">
+            Щоб увімкнути сортування за результатом, спочатку оберіть дисципліну.
+          </p>
+        {% endif %}
+      </fieldset>
+
+      <div class="flex md:justify-end gap-2">
+        <button type="submit" class="btn btn-primary btn-sm">Застосувати</button>
+        <a href="{% url 'category_detail' category.id %}" class="btn btn-sm">Скинути</a>
+      </div>
+    </form>
+  </article>
+
+  {% if videos %}
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {% for video in videos %}
+        <article class="card overflow-hidden">
+          <div class="card-body pb-0">
+            <div class="flex items-center justify-between mb-2">
+              <span class="inline-flex items-center rounded-full bg-gray-200 px-2.5 py-1 text-xs font-medium text-gray-800 dark:bg-white/10 dark:text-gray-200">
+                {{ video.get_event_type_display }}
+              </span>
+              <span class="text-xs text-gray-500 dark:text-gray-400">Спроба № {{ video.attempt_number }}</span>
+            </div>
+
+            <ul class="text-sm space-y-1">
+              <li>
+                <span class="text-gray-500 dark:text-gray-400">🎯 Результат:</span>
+                {{ video.result }}
+                <span class="ml-1 text-xs text-gray-500">
+                  {% if video.event_type == 'run' %}с{% else %}м{% endif %}
+                </span>
+              </li>
+              <li>
+                <span class="text-gray-500 dark:text-gray-400">⏱️ Час:</span>
+                {{ video.time|default:"—" }}
+              </li>
+            </ul>
+          </div>
+
+          <div class="p-4 pt-3">
+            <video controls class="w-full rounded-lg ring-1 ring-gray-200 dark:ring-white/10">
+              <source src="{{ video.video.url }}" type="video/mp4">
+            </video>
+            <div class="mt-3 flex gap-2">
+              <a href="{% url 'annotate_video' video.id %}?mode=view&from=category&cat={{ category.id }}"
+                 class="btn btn-primary">Переглянути</a>
+              <a href="{% url 'annotate_video' video.id %}?mode=edit&from=category&cat={{ category.id }}"
+                 class="btn">Анотувати</a>
+            </div>
+          </div>
+        </article>
+      {% endfor %}
+    </div>
+
+    {% if videos.paginator %}
+      <nav class="card mt-6">
+        <div class="card-body flex items-center justify-center gap-2">
+          {% with ev='event='|add:filter_event|urlencode so='sort='|add:sort|urlencode %}
+            {% if videos.has_previous %}
+              <a class="btn btn-sm" href="?page=1&{{ ev }}&{{ so }}">« Перша</a>
+              <a class="btn btn-sm" href="?page={{ videos.previous_page_number }}&{{ ev }}&{{ so }}">‹ Назад</a>
+            {% else %}
+              <span class="btn btn-sm opacity-50 pointer-events-none">« Перша</span>
+              <span class="btn btn-sm opacity-50 pointer-events-none">‹ Назад</span>
+            {% endif %}
+
+            <span class="px-3 py-1.5 rounded border border-gray-200 dark:border-white/10 bg-white/70 dark:bg-white/10">
+              Стор. <strong>{{ videos.number }}</strong> з {{ videos.paginator.num_pages }}
+            </span>
+
+            {% if videos.has_next %}
+              <a class="btn btn-sm" href="?page={{ videos.next_page_number }}&{{ ev }}&{{ so }}">Вперед ›</a>
+              <a class="btn btn-sm" href="?page={{ videos.paginator.num_pages }}&{{ ev }}&{{ so }}">Остання »</a>
+            {% else %}
+              <span class="btn btn-sm opacity-50 pointer-events-none">Вперед ›</span>
+              <span class="btn btn-sm opacity-50 pointer-events-none">Остання »</span>
+            {% endif %}
+          {% endwith %}
+        </div>
+      </nav>
+    {% endif %}
+  {% else %}
+    <article class="card">
+      <div class="card-body">
+        <p class="text-gray-600 dark:text-gray-300 italic">
+          У цій категорії немає відео за обраними фільтрами.
+        </p>
+      </div>
+    </article>
+  {% endif %}
+
+<script>
+  // Авто-submit при натисканні на пігулки + розумне вмикання/вимикання сорту "результат"
+  (function(){
+    const form = document.getElementById('filters-form');
+
+    const eventWrap = document.getElementById('seg-event');
+    const sortWrap  = document.getElementById('seg-sort');
+
+    function updateActive(container){
+      container.querySelectorAll('.seg__item').forEach(l => l.classList.remove('seg__item--active'));
+      const checked = container.querySelector('input:checked');
+      if (checked) checked.closest('.seg__item')?.classList.add('seg__item--active');
+    }
+
+    function toggleResultSort(){
+      const eventChecked = eventWrap.querySelector('input[name="event"]:checked');
+      const hasDiscipline = eventChecked && eventChecked.value !== '';
+      sortWrap.querySelectorAll('input[value="result_best"], input[value="result_worst"]').forEach(inp => {
+        const label = inp.closest('.seg__item');
+        if (hasDiscipline) {
+          inp.disabled = false;
+          label.classList.remove('seg__item--disabled');
+        } else {
+          inp.disabled = true;
+          label.classList.remove('seg__item--active');
+          label.classList.add('seg__item--disabled');
+          // якщо був обраний «result_*», знімемо вибір
+          if (inp.checked) {
+            inp.checked = false;
+            // за замовчуванням повернемо на created_desc
+            const fallback = sortWrap.querySelector('input[value="created_desc"]');
+            if (fallback) fallback.checked = true;
+          }
+        }
+      });
+      updateActive(sortWrap);
+    }
+
+    eventWrap.addEventListener('change', () => {
+      updateActive(eventWrap);
+      toggleResultSort();
+      form.submit();
+    });
+
+    sortWrap.addEventListener('change', () => {
+      updateActive(sortWrap);
+      form.submit();
+    });
+
+    // init
+    updateActive(eventWrap);
+    updateActive(sortWrap);
+    toggleResultSort();
+  })();
+</script>
+
+{% endblock %}

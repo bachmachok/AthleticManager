@@ -1,86 +1,204 @@
+{# training_manager/dashboard/templates/dashboard/library.html #}
 {% extends "dashboard/base.html" %}
 
 {% block title %}Бібліотека — Athletic Manager{% endblock %}
 
 {% block content %}
+
+<style>
+  /* ===== Segmented controls (пігулки) ===== */
+  .seg {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 8px;
+    border-radius: 12px;
+    background: var(--seg-bg, #f8fafc);
+  }
+  .dark .seg { --seg-bg: rgba(255,255,255,.06); }
+
+  .seg__item {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: .5rem;
+    padding: 10px 14px;
+    border-radius: 999px;
+    font-size: .9rem;
+    font-weight: 600;
+    cursor: pointer;
+    user-select: none;
+    background: #fff;
+    border: 1px solid rgba(15,23,42,.08);
+    transition: box-shadow .15s ease, transform .06s ease, background .15s ease, color .15s ease;
+  }
+  .dark .seg__item {
+    background: rgba(255,255,255,.04);
+    border-color: rgba(255,255,255,.08);
+  }
+  .seg__item:hover { transform: translateY(-1px); }
+
+  .seg__item input {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .seg__item--active {
+    background: #1e49ff;
+    color: #fff;
+    border-color: transparent;
+    box-shadow: 0 6px 18px rgba(30,73,255,.35);
+  }
+
+  .seg__icon {
+    font-size: 1rem;
+    line-height: 1;
+  }
+
+  .filters-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+  @media (min-width: 860px) {
+    .filters-grid {
+      grid-template-columns: 1fr 2fr auto;
+      align-items: center;
+    }
+  }
+</style>
+
   <h1 class="text-2xl md:text-3xl font-semibold tracking-tight mb-6">🎥 Бібліотека відео</h1>
 
-  <!-- Фільтр -->
-  <article class="card mb-8">
-    <form method="get" class="card-body grid grid-cols-1 md:grid-cols-[auto,1fr,auto] gap-4 md:items-center">
-      <label for="event" class="text-sm font-medium text-gray-700 dark:text-gray-200">
-        Фільтр за типом події:
-      </label>
+  <!-- Фільтри + сортування -->
+  <article class="card mb-6">
+    <form id="lib-filters" method="get" class="card-body filters-grid">
 
-      <div>
-        <select
-          name="event"
-          id="event"
-          class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm
-                 focus:outline-none focus:ring-2 focus:ring-brand-500
-                 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-100">
-          <option value="">Усі</option>
-          <option value="RUNNING"  {% if filter_event == 'RUNNING' %}selected{% endif %}>Біг</option>
-          <option value="JUMPING"  {% if filter_event == 'JUMPING' %}selected{% endif %}>Стрибки</option>
-          <option value="THROWING" {% if filter_event == 'THROWING' %}selected{% endif %}>Метання/Штовхання</option>
-        </select>
-      </div>
+      {# Тип категорії як пігулки #}
+      <fieldset>
+        <legend class="mb-2 text-sm font-medium text-gray-700 dark:text-gray-200">Категорія</legend>
+        <div class="seg" id="seg-type">
+          <label class="seg__item {% if not filter_attempt_type %}seg__item--active{% endif %}">
+            <span class="seg__icon">✨</span> Усі
+            <input type="radio" name="attempt_type" value="" {% if not filter_attempt_type %}checked{% endif %}>
+          </label>
 
-      <div class="flex md:justify-end">
-        <button type="submit" class="btn btn-primary">Застосувати</button>
+          {% for val, label in attempt_type_choices %}
+            <label class="seg__item {% if filter_attempt_type == val %}seg__item--active{% endif %}">
+              {% if val == 'competition' %}<span class="seg__icon">🏆</span>{% else %}<span class="seg__icon">🧪</span>{% endif %}
+              {{ label }}
+              <input type="radio" name="attempt_type" value="{{ val }}" {% if filter_attempt_type == val %}checked{% endif %}>
+            </label>
+          {% endfor %}
+        </div>
+      </fieldset>
+
+      {# Сортування категорій як пігулки (без типу та місця) #}
+      <fieldset>
+        <legend class="mb-2 text-sm font-medium text-gray-700 dark:text-gray-200">Сортування</legend>
+        <div class="seg" id="seg-sort">
+          <label class="seg__item {% if sort == 'date_desc' %}seg__item--active{% endif %}">
+            <span class="seg__icon">🆕</span> Дата (новіші)
+            <input type="radio" name="sort" value="date_desc" {% if sort == 'date_desc' %}checked{% endif %}>
+          </label>
+          <label class="seg__item {% if sort == 'date_asc' %}seg__item--active{% endif %}">
+            <span class="seg__icon">📅</span> Дата (старіші)
+            <input type="radio" name="sort" value="date_asc" {% if sort == 'date_asc' %}checked{% endif %}>
+          </label>
+
+          <label class="seg__item {% if sort == 'videos_desc' %}seg__item--active{% endif %}">
+            <span class="seg__icon">▶️</span> К-сть відео ↓
+            <input type="radio" name="sort" value="videos_desc" {% if sort == 'videos_desc' %}checked{% endif %}>
+          </label>
+          <label class="seg__item {% if sort == 'videos_asc' %}seg__item--active{% endif %}">
+            <span class="seg__icon">▶️</span> К-сть відео ↑
+            <input type="radio" name="sort" value="videos_asc" {% if sort == 'videos_asc' %}checked{% endif %}>
+          </label>
+        </div>
+      </fieldset>
+
+      <div class="flex md:justify-end gap-2">
+        <button type="submit" class="btn btn-secondary btn-sm">Застосувати</button>
+        <a href="{% url 'library' %}" class="btn btn-sm">Скинути</a>
       </div>
     </form>
   </article>
 
-  <!-- Категорії -->
   {% if categories %}
-    <div class="space-y-8">
-      {% for cat in categories %}
-        {% with videos=cat.videos.all %}
-          {% if videos|length %}
-            <article class="card">
-              <header class="card-body pb-4 border-b border-gray-200 dark:border-white/10">
-                <div class="flex flex-wrap items-center gap-3 justify-between">
-                  <h2 class="text-lg font-semibold">
-                    {{ cat.get_attempt_type_display }}
-                  </h2>
-                  <div class="flex flex-wrap items-center gap-2 text-xs">
-                    <span class="inline-flex items-center rounded-full bg-gray-200 px-2.5 py-1 font-medium text-gray-800 dark:bg-white/10 dark:text-gray-200">
-                      📍 {{ cat.place }}
-                    </span>
-                    <span class="inline-flex items-center rounded-full bg-gray-200 px-2.5 py-1 font-medium text-gray-800 dark:bg_white/10 dark:text-gray-200">
-                      📅 {{ cat.date }}
-                    </span>
-                  </div>
-                </div>
-              </header>
+    <article class="card">
+      <div class="overflow-x-auto">
+        <table class="min-w-full text-sm">
+          <thead class="bg-gray-100/70 dark:bg-white/5 text-gray-700 dark:text-gray-200">
+            <tr>
+              <th class="px-4 py-3 text-left font-semibold">Тип</th>
+              <th class="px-4 py-3 text-left font-semibold">Місце</th>
+              <th class="px-4 py-3 text-left font-semibold">Дата</th>
+              <th class="px-4 py-3 text-left font-semibold">Відео</th>
+              <th class="px-4 py-3 text-right font-semibold">Дії</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-200 dark:divide-white/10">
+            {% for cat in categories %}
+              <tr class="hover:bg-gray-50 dark:hover:bg-white/5 transition-colors">
+                <td class="px-4 py-3">
+                  <span class="inline-flex items-center gap-2">
+                    <span class="h-6 w-6 grid place-items-center rounded-md bg-brand-500/10 text-brand-600">🎞️</span>
+                    <span class="font-medium">{{ cat.get_attempt_type_display }}</span>
+                  </span>
+                </td>
+                <td class="px-4 py-3">
+                  <span class="inline-flex items-center gap-1 text-gray-800 dark:text-gray-200">
+                    <span>📍</span><span>{{ cat.place }}</span>
+                  </span>
+                </td>
+                <td class="px-4 py-3">
+                  <span class="inline-flex items-center gap-1 text-gray-800 dark:text-gray-200">
+                    <span>📅</span><span>{{ cat.date }}</span>
+                  </span>
+                </td>
+                <td class="px-4 py-3">
+                  <span class="inline-flex items-center gap-1">
+                    <span>▶️</span><span class="font-medium">{{ cat.videos_count|default:0 }}</span>
+                  </span>
+                </td>
+                <td class="px-4 py-3 text-right">
+                  <a href="{% url 'category_detail' cat.id %}" class="btn btn-secondary btn-sm">Відкрити</a>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
 
-              <div class="card-body">
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {% for video in videos %}
-                    <article class="card overflow-hidden">
-                      <div class="card-body pb-0">
-                        <ul class="text-sm space-y-1">
-                          <li><span class="text-gray-500 dark:text-gray-400">🏷️ Тип:</span> {{ video.get_event_type_display }}</li>
-                          <li><span class="text-gray-500 dark:text-gray-400">🎯 Результат:</span> {{ video.result }}</li>
-                          <li><span class="text-gray-500 dark:text-gray-400">🧮 Спроба №:</span> {{ video.attempt_number }}</li>
-                          <li><span class="text-gray-500 dark:text-gray-400">⏱️ Час:</span> {{ video.time }}</li>
-                        </ul>
-                      </div>
-                      <div class="p-4 pt-3">
-                        <video controls class="w-full rounded-lg ring-1 ring-gray-200 dark:ring-white/10">
-                          <source src="{{ video.video.url }}" type="video/mp4">
-                        </video>
-                      </div>
-                    </article>
-                  {% endfor %}
-                </div>
-              </div>
-            </article>
-          {% endif %}
-        {% endwith %}
-      {% endfor %}
-    </div>
+      {# Пагінація #}
+      {% if categories.paginator %}
+        <nav class="card-body pt-4 flex items-center justify-center gap-2">
+          {% with qs='attempt_type='|add:filter_attempt_type|urlencode|add:'&sort='|add:sort|urlencode %}
+            {% if categories.has_previous %}
+              <a class="btn btn-sm" href="?page=1&{{ qs }}">« Перша</a>
+              <a class="btn btn-sm" href="?page={{ categories.previous_page_number }}&{{ qs }}">‹ Назад</a>
+            {% else %}
+              <span class="btn btn-sm opacity-50 pointer-events-none">« Перша</span>
+              <span class="btn btn-sm opacity-50 pointer-events-none">‹ Назад</span>
+            {% endif %}
+
+            <span class="px-3 py-1.5 rounded border border-gray-200 dark:border-white/10 bg-white/70 dark:bg-white/10">
+              Стор. <strong>{{ categories.number }}</strong> з {{ categories.paginator.num_pages }}
+            </span>
+
+            {% if categories.has_next %}
+              <a class="btn btn-sm" href="?page={{ categories.next_page_number }}&{{ qs }}">Вперед ›</a>
+              <a class="btn btn-sm" href="?page={{ categories.paginator.num_pages }}&{{ qs }}">Остання »</a>
+            {% else %}
+              <span class="btn btn-sm opacity-50 pointer-events-none">Вперед ›</span>
+              <span class="btn btn-sm opacity-50 pointer-events-none">Остання »</span>
+            {% endif %}
+          {% endwith %}
+        </nav>
+      {% endif %}
+    </article>
   {% else %}
     <article class="card">
       <div class="card-body">
@@ -88,4 +206,29 @@
       </div>
     </article>
   {% endif %}
+
+<script>
+  // Авто-submit при кліку на пігулки + підсвітка активних
+  (function(){
+    const form = document.getElementById('lib-filters');
+    const segs = [document.getElementById('seg-type'), document.getElementById('seg-sort')];
+
+    function updateActive(container){
+      if (!container) return;
+      container.querySelectorAll('.seg__item').forEach(l => l.classList.remove('seg__item--active'));
+      const checked = container.querySelector('input:checked');
+      if (checked) checked.closest('.seg__item')?.classList.add('seg__item--active');
+    }
+
+    segs.forEach(seg => {
+      if (!seg) return;
+      seg.addEventListener('change', () => {
+        updateActive(seg);
+        form.submit();
+      });
+      updateActive(seg);
+    });
+  })();
+</script>
+
 {% endblock %}
