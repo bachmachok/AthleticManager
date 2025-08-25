@@ -1,18 +1,27 @@
 {
-  "name": "athletic-manager",
-  "private": true,
+  "name": "trainingmanager",
   "version": "1.0.0",
   "description": "",
-  "main": "tailwind.config.js",
-"scripts": {
-  "tw:dev": "node ./node_modules/tailwindcss/lib/cli.js -c tailwind.config.js -i dashboard/static/src/tailwind.css -o dashboard/static/dashboard/app.css --watch",
-  "tw:build": "node ./node_modules/tailwindcss/lib/cli.js -c tailwind.config.js -i dashboard/static/src/tailwind.css -o dashboard/static/dashboard/app.css --minify"
-},
+  "main": "index.js",
+  "scripts": {
+    "dev": "npx tailwindcss -i training_manager/dashboard/static/src/tailwind.css -o training_manager/dashboard/static/dashboard/app.css --watch"
+  },
+
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bachmachok/AthleticManager.git"
+  },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/bachmachok/AthleticManager/issues"
+  },
+  "homepage": "https://github.com/bachmachok/AthleticManager#readme",
   "devDependencies": {
-    "tailwindcss": "^3.4.9"
+    "autoprefixer": "^10.4.21",
+    "postcss": "^8.5.6",
+    "tailwindcss": "^3.4.1"
   }
 }

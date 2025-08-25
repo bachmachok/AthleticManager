@@ -199,3 +199,17 @@ __pycache__/
 
 # Node
 node_modules/
+
+# SQLite WAL/SHM файли (інколи зʼявляються поруч із .sqlite3)
+*.sqlite3-wal
+*.sqlite3-shm
+
+# Якщо хочеш тримати порожню media/ в репо
+!media/.gitkeep
+
+# На випадок, якщо випадково створиш OAuth-файли в корені проєкту
+/credentials.json
+/token.json
+
+# (опційно) VS Code налаштування
+.vscode/
