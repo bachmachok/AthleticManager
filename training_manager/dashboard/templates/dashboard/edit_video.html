@@ -2,158 +2,233 @@
 {% block title %}Редагувати відео — Athletic Manager{% endblock %}
 
 {% block content %}
-  <h1 class="hidden" aria-hidden="true">Редагувати відео</h1>
+<style>
+  /* ===== Тема форми (локально для цієї сторінки) ===== */
+  :root{
+    --control-bg: #ffffff;
+    --control-text: #0f172a;
+    --control-border: rgba(15,23,42,.12);
+    --control-disabled-bg: #f1f5f9;
+    --control-disabled-text: #64748b;
+    --select-arrow: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='%235b6b92'%3E%3Cpath fill-rule='evenodd' d='M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.24a.75.75 0 01-1.06 0L5.25 8.29a.75.75 0 01-.02-1.08z' clip-rule='evenodd'/%3E%3C/svg%3E");
+  }
+  .dark{
+    --control-bg: rgba(255,255,255,.06);
+    --control-text: #e5e7eb;
+    --control-border: rgba(255,255,255,.18);
+    --control-disabled-bg: rgba(255,255,255,.08);
+    --control-disabled-text: #cbd5e1;
+    --select-arrow: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='%23cbd5e1'%3E%3Cpath fill-rule='evenodd' d='M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.24a.75.75 0 01-1.06 0L5.25 8.29a.75.75 0 01-.02-1.08z' clip-rule='evenodd'/%3E%3C/svg%3E");
+    color-scheme: dark; /* важливо для нативних випадайок */
+  }
 
-  <div class="mx-auto w-full max-w-[920px]">
-    <article class="card">
-      <header class="px-6 pt-6 pb-3 border-b border-gray-200 dark:border-white/10">
-        <h2 class="text-xl md:text-2xl font-semibold flex items-center gap-2">
-          🎞️ Редагувати відео спроби
-        </h2>
-      </header>
+  .form-skin input[type="text"],
+  .form-skin input[type="number"],
+  .form-skin input[type="time"],
+  .form-skin input[type="date"],
+  .form-skin input[type="file"],
+  .form-skin select,
+  .form-skin textarea{
+    background: var(--control-bg);
+    color: var(--control-text);
+    border: 1px solid var(--control-border);
+    border-radius: .625rem; /* 10px */
+    padding: .5rem .625rem;
+  }
+  /* Стан disabled/readonly — без сильної прозорості, щоб було читабельно */
+  .form-skin input[disabled], .form-skin select[disabled], .form-skin textarea[disabled],
+  .form-skin input[readonly], .form-skin select[readonly], .form-skin textarea[readonly]{
+    background: var(--control-disabled-bg);
+    color: var(--control-disabled-text);
+    border-color: var(--control-border);
+    opacity: 1;
+    cursor: not-allowed;
+  }
+  /* Стрілка select + відступ під неї */
+  .form-skin select{
+    appearance: none;
+    padding-right: 2.25rem;
+    background-image: var(--select-arrow);
+    background-repeat: no-repeat;
+    background-position: right .6rem center;
+    background-size: 16px 16px;
+  }
+  /* Коли меню відкрите — фон та текст опцій у темній темі */
+  .dark .form-skin select option,
+  .dark .form-skin select optgroup{
+    background:#0f172a; color:#e5e7eb;
+  }
+  .dark .form-skin select option:checked{ background:#1e49ff; color:#fff; }
 
-      <form method="post" enctype="multipart/form-data" novalidate>
-        {% csrf_token %}
+  /* file-selector button */
+  .form-skin input[type="file"]::-webkit-file-upload-button,
+  .form-skin input[type="file"]::file-selector-button{
+    background: rgba(30,73,255,.10);
+    border: 1px solid var(--control-border);
+    border-radius: .5rem;
+    padding: .375rem .625rem;
+    cursor: pointer;
+  }
+  .dark .form-skin input[type="file"]::file-selector-button{
+    background: rgba(30,73,255,.18);
+    color:#e5e7eb;
+  }
 
-        {% if form.non_field_errors %}
-          <div class="px-6 pt-4">
-            <div class="rounded-lg bg-red-50 text-red-700 px-3 py-2 text-sm dark:bg-red-900/20 dark:text-red-300">
-              {% for err in form.non_field_errors %}<div>{{ err }}</div>{% endfor %}
-            </div>
-          </div>
-        {% endif %}
+  /* малий бейдж одиниці вимірювання */
+  .unit-badge{
+    display:inline-block; margin-left:.375rem; padding:.125rem .5rem; font-size:11px;
+    border-radius:999px; background:#eef2ff; color:#1e49ff;
+  }
+  .dark .unit-badge{ background: rgba(30,73,255,.22); color:#e0e7ff; }
+</style>
 
-        <div class="p-6">
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+<h1 class="hidden" aria-hidden="true">Редагувати відео</h1>
 
-            <div>
-              <label for="{{ form.category.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
-                {{ form.category.label }} <span class="text-red-600">*</span>
-              </label>
-              {{ form.category }}
-              {% if form.category.errors %}
-                <ul class="mt-1 text-xs text-red-600 dark:text-red-400 space-y-0.5">
-                  {% for err in form.category.errors %}<li>{{ err }}</li>{% endfor %}
-                </ul>
-              {% endif %}
-            </div>
+<div class="mx-auto w-full max-w-[920px]">
+  <article class="card form-skin">
+    <header class="px-6 pt-6 pb-3 border-b border-gray-200 dark:border-white/10">
+      <h2 class="text-xl md:text-2xl font-semibold flex items-center gap-2">
+        🎞️ Редагувати відео спроби
+      </h2>
+    </header>
 
-            <div>
-              <label for="{{ form.event_type.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
-                {{ form.event_type.label }} <span class="text-red-600">*</span>
-              </label>
-              {{ form.event_type }}
-              {% if form.event_type.errors %}
-                <ul class="mt-1 text-xs text-red-600 dark:text-red-400 space-y-0.5">
-                  {% for err in form.event_type.errors %}<li>{{ err }}</li>{% endfor %}
-                </ul>
-              {% endif %}
-            </div>
+    <form method="post" enctype="multipart/form-data" novalidate>
+      {% csrf_token %}
 
-            <div>
-              <label for="{{ form.result.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
-                {{ form.result.label }}
-                <span id="unit-badge" class="inline-block align-middle ml-1 text-[11px] px-1.5 py-0.5 rounded bg-gray-200 dark:bg-white/10">—</span>
-              </label>
-              {{ form.result }}
-              {% if form.result.errors %}
-                <ul class="mt-1 text-xs text-red-600 dark:text-red-400 space-y-0.5">
-                  {% for err in form.result.errors %}<li>{{ err }}</li>{% endfor %}
-                </ul>
-              {% endif %}
-            </div>
-
-            <div>
-              <label for="{{ form.attempt_number.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
-                {{ form.attempt_number.label }}
-              </label>
-              {{ form.attempt_number }}
-              {% if form.attempt_number.errors %}
-                <ul class="mt-1 text-xs text-red-600 dark:text-red-400 space-y-0.5">
-                  {% for err in form.attempt_number.errors %}<li>{{ err }}</li>{% endfor %}
-                </ul>
-              {% endif %}
-            </div>
-
-            <div id="pip-wrapper">
-              <label for="{{ form.place_in_protocol.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
-                {{ form.place_in_protocol.label }} <span id="pip-required" class="text-red-600" style="display:none">*</span>
-              </label>
-              {{ form.place_in_protocol }}
-              {% if form.place_in_protocol.errors %}
-                <ul class="mt-1 text-xs text-red-600 dark:text-red-400 space-y-0.5">
-                  {% for err in form.place_in_protocol.errors %}<li>{{ err }}</li>{% endfor %}
-                </ul>
-              {% endif %}
-            </div>
-
-            <div>
-              <label for="{{ form.time.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
-                {{ form.time.label }}
-              </label>
-              {{ form.time }}
-              {% if form.time.errors %}
-                <ul class="mt-1 text-xs text-red-600 dark:text-red-400 space-y-0.5">
-                  {% for err in form.time.errors %}<li>{{ err }}</li>{% endfor %}
-                </ul>
-              {% endif %}
-            </div>
-
-            <div class="md:col-span-2">
-              <label for="{{ form.video.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
-                {{ form.video.label }} <span class="text-red-600">*</span>
-              </label>
-              {{ form.video }}
-              {% if form.video.errors %}
-                <ul class="mt-1 text-xs text-red-600 dark:text-red-400 space-y-0.5">
-                  {% for err in form.video.errors %}<li>{{ err }}</li>{% endfor %}
-                </ul>
-              {% endif %}
-            </div>
-
+      {% if form.non_field_errors %}
+        <div class="px-6 pt-4">
+          <div class="rounded-lg bg-red-50 text-red-700 px-3 py-2 text-sm dark:bg-red-900/20 dark:text-red-300">
+            {% for err in form.non_field_errors %}<div>{{ err }}</div>{% endfor %}
           </div>
         </div>
+      {% endif %}
 
-        <footer class="px-6 pb-6 pt-3 border-t border-gray-200 dark:border-white/10 flex items-center justify-end gap-3">
-          <a href="{% url 'upload' %}" class="btn btn-ghost btn-sm">Відмінити</a>
-          <button type="submit" class="btn btn-primary btn-sm">Зберегти зміни</button>
-        </footer>
-      </form>
-    </article>
-  </div>
+      <div class="p-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 
-  {% if categories_meta %}{{ categories_meta|json_script:"categories-meta" }}{% endif %}
+          <div>
+            <label for="{{ form.category.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+              {{ form.category.label }} <span class="text-red-600">*</span>
+            </label>
+            {{ form.category }}
+            {% if form.category.errors %}
+              <ul class="mt-1 text-xs text-red-600 dark:text-red-400 space-y-0.5">
+                {% for err in form.category.errors %}<li>{{ err }}</li>{% endfor %}
+              </ul>
+            {% endif %}
+          </div>
 
-  <script>
-    (function () {
-      // одиниці «с/м» біля результату
-      const eventSel = document.getElementById('id_event_type');
-      const unit = document.getElementById('unit-badge');
-      function updateUnit(){ if(unit) unit.textContent = (eventSel?.value === 'run') ? 'с' : 'м'; }
-      eventSel?.addEventListener('change', updateUnit); updateUnit();
+          <div>
+            <label for="{{ form.event_type.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+              {{ form.event_type.label }} <span class="text-red-600">*</span>
+            </label>
+            {{ form.event_type }}
+            {% if form.event_type.errors %}
+              <ul class="mt-1 text-xs text-red-600 dark:text-red-400 space-y-0.5">
+                {% for err in form.event_type.errors %}<li>{{ err }}</li>{% endfor %}
+              </ul>
+            {% endif %}
+          </div>
 
-      // показувати «Місце в протоколі» тільки для змагальних
-      const catSel = document.getElementById('id_category');
-      const pipWrap = document.getElementById('pip-wrapper');
-      const pipInp  = document.getElementById('id_place_in_protocol');
-      const pipReq  = document.getElementById('pip-required');
+          <div>
+            <label for="{{ form.result.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+              {{ form.result.label }} <span id="unit-badge" class="unit-badge">—</span>
+            </label>
+            {{ form.result }}
+            {% if form.result.errors %}
+              <ul class="mt-1 text-xs text-red-600 dark:text-red-400 space-y-0.5">
+                {% for err in form.result.errors %}<li>{{ err }}</li>{% endfor %}
+              </ul>
+            {% endif %}
+          </div>
 
-      let typeById = {};
-      const meta = document.getElementById('categories-meta');
-      if (meta) {
-        try { JSON.parse(meta.textContent).forEach(x => typeById[String(x.id)] = x.attempt_type); } catch (e) {}
-      }
+          <div>
+            <label for="{{ form.attempt_number.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+              {{ form.attempt_number.label }}
+            </label>
+            {{ form.attempt_number }}
+            {% if form.attempt_number.errors %}
+              <ul class="mt-1 text-xs text-red-600 dark:text-red-400 space-y-0.5">
+                {% for err in form.attempt_number.errors %}<li>{{ err }}</li>{% endfor %}
+              </ul>
+            {% endif %}
+          </div>
 
-      function togglePip(){
-        if (!catSel || !pipWrap) return;
-        const isComp = typeById[String(catSel.value || '')] === 'competition';
-        pipWrap.style.display = isComp ? '' : 'none';
-        if (pipInp) isComp ? pipInp.setAttribute('required','required') : pipInp.removeAttribute('required');
-        if (pipReq) pipReq.style.display = isComp ? '' : 'none';
-      }
+          <div id="pip-wrapper">
+            <label for="{{ form.place_in_protocol.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+              {{ form.place_in_protocol.label }} <span id="pip-required" class="text-red-600" style="display:none">*</span>
+            </label>
+            {{ form.place_in_protocol }}
+            {% if form.place_in_protocol.errors %}
+              <ul class="mt-1 text-xs text-red-600 dark:text-red-400 space-y-0.5">
+                {% for err in form.place_in_protocol.errors %}<li>{{ err }}</li>{% endfor %}
+              </ul>
+            {% endif %}
+          </div>
 
-      catSel?.addEventListener('change', togglePip);
-      togglePip();
-    })();
-  </script>
+          <div>
+            <label for="{{ form.time.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+              {{ form.time.label }}
+            </label>
+            {{ form.time }}
+            {% if form.time.errors %}
+              <ul class="mt-1 text-xs text-red-600 dark:text-red-400 space-y-0.5">
+                {% for err in form.time.errors %}<li>{{ err }}</li>{% endfor %}
+              </ul>
+            {% endif %}
+          </div>
+
+          <div class="md:col-span-2">
+            <label for="{{ form.video.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+              {{ form.video.label }} <span class="text-red-600">*</span>
+            </label>
+            {{ form.video }}
+            {% if form.video.errors %}
+              <ul class="mt-1 text-xs text-red-600 dark:text-red-400 space-y-0.5">
+                {% for err in form.video.errors %}<li>{{ err }}</li>{% endfor %}
+              </ul>
+            {% endif %}
+          </div>
+
+        </div>
+      </div>
+
+      <footer class="px-6 pb-6 pt-3 border-t border-gray-200 dark:border-white/10 flex items-center justify-end gap-3">
+        <a href="{% url 'upload' %}" class="btn btn-ghost btn-sm">Відмінити</a>
+        <button type="submit" class="btn btn-primary btn-sm">Зберегти зміни</button>
+      </footer>
+    </form>
+  </article>
+</div>
+
+{% if categories_meta %}{{ categories_meta|json_script:"categories-meta" }}{% endif %}
+
+<script>
+  (function () {
+    // одиниці «с/м» біля результату
+    const eventSel = document.getElementById('id_event_type');
+    const unit = document.getElementById('unit-badge');
+    function updateUnit(){ if(unit) unit.textContent = (eventSel?.value === 'run') ? 'с' : 'м'; }
+    eventSel?.addEventListener('change', updateUnit); updateUnit();
+
+    // «Місце в протоколі» — лише для змагальних категорій
+    const catSel = document.getElementById('id_category');
+    const pipWrap = document.getElementById('pip-wrapper');
+    const pipInp  = document.getElementById('id_place_in_protocol');
+    const pipReq  = document.getElementById('pip-required');
+
+    let typeById = {};
+    const meta = document.getElementById('categories-meta');
+    if (meta) { try { JSON.parse(meta.textContent).forEach(x => typeById[String(x.id)] = x.attempt_type); } catch (e) {} }
+
+    function togglePip(){
+      const isComp = typeById[String(catSel?.value || '')] === 'competition';
+      if (pipWrap) pipWrap.style.display = isComp ? '' : 'none';
+      if (pipInp)  isComp ? pipInp.setAttribute('required','required') : pipInp.removeAttribute('required');
+      if (pipReq)  pipReq.style.display = isComp ? '' : 'none';
+    }
+    catSel?.addEventListener('change', togglePip);
+    togglePip();
+  })();
+</script>
 {% endblock %}

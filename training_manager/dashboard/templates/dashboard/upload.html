@@ -5,8 +5,39 @@
 {% block content %}
 
 <style>
+  /* ===== ТЕМИ ТА ЗМІННІ ===== */
+  :root{
+    --upload-container: 1120px;
+    --card-bg: #fff;
+    --card-elev1: 0 1px 2px rgba(0,0,0,.04), 0 16px 40px rgba(0,0,0,.07);
+    --shell-shadow: 0 1px 2px rgba(0,0,0,.04), 0 8px 24px rgba(0,0,0,.06);
+    --muted: #4b5563;
+    --thead-bg:#f9fafb;
+    --thead-text:#374151;
+    --divider: rgba(0,0,0,.06);
+    --hover-row: rgba(0,0,0,.02);
+    --control-bg:#ffffff;
+    --control-border: rgba(15,23,42,.12);
+    --control-text:#0f172a;
+    color-scheme: light;
+  }
+  .dark{
+    --card-bg: rgba(255,255,255,.06);
+    --card-elev1: 0 1px 2px rgba(0,0,0,.25), 0 16px 40px rgba(0,0,0,.35);
+    --shell-shadow: 0 1px 2px rgba(0,0,0,.25), 0 8px 24px rgba(0,0,0,.35);
+    --muted: #e5e7eb;
+    --thead-bg: rgba(255,255,255,.05);
+    --thead-text: #e5e7eb;
+    --divider: rgba(255,255,255,.12);
+    --hover-row: rgba(255,255,255,.05);
+    --control-bg: rgba(255,255,255,.06);
+    --control-border: rgba(255,255,255,.18);
+    --control-text: #f5f5f6;
+    /* ВАЖЛИВО: дає системним контролам (у т.ч. відкритому списку <select>) темне оформлення */
+    color-scheme: dark;
+  }
+
   /* ===== СТАБІЛЬНЕ ПОЛОТНО І ЦЕНТР ===== */
-  :root{ --upload-container: 1120px; }
   .upload-shell{ max-width: var(--upload-container); margin-inline:auto; }
   .page-title{ text-align:center; margin:0 0 18px 0; }
 
@@ -14,13 +45,16 @@
   .tabs-wrap{ display:flex; justify-content:center; margin-bottom:18px; }
   .tabs{
     display:grid; grid-template-columns: 1fr 1fr; gap:8px; width:520px; padding:6px;
-    border-radius:12px; background: var(--card-bg,#fff);
-    box-shadow: 0 1px 2px rgba(0,0,0,.04), 0 8px 24px rgba(0,0,0,.06);
+    border-radius:12px; background: var(--card-bg);
+    box-shadow: var(--shell-shadow);
+    backdrop-filter: saturate(120%) blur(2px);
   }
   .tabs button{
     border:none; border-radius:10px; padding:10px 16px; font-weight:600; line-height:1; cursor:pointer;
-    transition: transform .06s, box-shadow .15s, background .15s; background:transparent;
+    transition: transform .06s, box-shadow .15s, background .15s, color .15s;
+    background:transparent; color:inherit;
   }
+  .tabs button:hover{ transform: translateY(-1px); }
   .tabs button[aria-selected="true"]{ background:#1e49ff; color:#fff; box-shadow:0 6px 18px rgba(30,73,255,.35); }
   .tabs button:focus-visible{ outline:2px solid #1e49ff; outline-offset:2px; }
 
@@ -30,14 +64,13 @@
   /* базова картка — inline-block, тож не тягнеться на всю ширину */
   .upload-card{
     display:inline-block; max-width:100%;
-    border-radius:16px; background: var(--card-bg,#fff);
-    box-shadow: 0 1px 2px rgba(0,0,0,.04), 0 16px 40px rgba(0,0,0,.07);
+    border-radius:16px; background: var(--card-bg);
+    box-shadow: var(--card-elev1);
     padding:28px;
   }
   .card-title{ text-align:center; font-weight:700; font-size:22px; margin:4px 0 22px; }
 
   /* ===== ФОРМА — контент вирішує ширину ===== */
-  .upload-card--form{ }
   .upload-card--form .form-grid{
     display:grid;
     grid-template-columns: max-content max-content; /* не розтягуємося */
@@ -46,17 +79,75 @@
   @media (max-width: 900px){
     .upload-card--form .form-grid{ grid-template-columns: max-content; }
   }
-  .field label{ display:block; margin-bottom:6px; font-size:14px; color: var(--muted,#4b5563); }
+  .field label{ display:block; margin-bottom:6px; font-size:14px; color: var(--muted); }
   .control > *{
     width:auto;            /* більше не 100% */
     max-width:340px;       /* запобігає монструозним елементам */
     min-width:200px;       /* щоб не було надто вузько */
   }
   .control.control--wide > *{ max-width:520px; min-width:240px; }
+
+  /* інпути/селекти у світлій/темній темі */
+  .upload-card input[type="text"],
+  .upload-card input[type="number"],
+  .upload-card input[type="time"],
+  .upload-card input[type="date"],
+  .upload-card input[type="file"],
+  .upload-card select,
+  .upload-card textarea{
+    background: var(--control-bg);
+    color: var(--control-text);
+    border: 1px solid var(--control-border);
+    border-radius: 10px;
+    padding: 8px 10px;
+  }
+
+  /* ===== СЕЛЕКТИ: фікс стрілки + темна випадайка ===== */
+  .upload-card select{
+    -webkit-appearance:none;
+    -moz-appearance:none;
+    appearance:none;
+    padding-right: 2.25rem; /* місце під стрілку */
+    background-repeat: no-repeat;
+    background-position: right .6rem center;
+    background-size: 16px 16px;
+    /* світла стрілка */
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='%235b6b92'%3E%3Cpath fill-rule='evenodd' d='M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.24a.75.75 0 01-1.06 0L5.25 8.29a.75.75 0 01-.02-1.08z' clip-rule='evenodd'/%3E%3C/svg%3E");
+  }
+  .dark .upload-card select{
+    /* темна стрілка */
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='%23cbd5e1'%3E%3Cpath fill-rule='evenodd' d='M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.24a.75.75 0 01-1.06 0L5.25 8.29a.75.75 0 01-.02-1.08z' clip-rule='evenodd'/%3E%3C/svg%3E");
+  }
+  /* У деяких браузерах можна задати фон опцій (коли меню відкрите) */
+  .dark .upload-card select option,
+  .dark .upload-card select optgroup{
+    background-color:#0f172a; /* gray-900 */
+    color:#e5e7eb;            /* gray-200 */
+  }
+  .dark .upload-card select option:checked{ background-color:#1e49ff; color:#fff; }
+  /* Попросимо браузер рендерити темні нативні елементи */
+  .dark select, .dark input, .dark textarea { color-scheme: dark; }
+
+  .upload-card input[type="file"]::-webkit-file-upload-button,
+  .upload-card input[type="file"]::file-selector-button{
+    background: rgba(30,73,255,.08);
+    border: 1px solid var(--control-border);
+    border-radius: 8px;
+    padding: 6px 10px;
+    cursor: pointer;
+  }
+  .dark .upload-card input[type="file"]::file-selector-button{
+    background: rgba(30,73,255,.18);
+    border-color: rgba(255,255,255,.18);
+    color:#e5e7eb;
+  }
+
   .unit-badge{
     display:inline-block; margin-left:6px; padding:2px 8px; font-size:11px;
     border-radius:999px; background:#eef2ff; color:#1e49ff; vertical-align:middle;
   }
+  .dark .unit-badge{ background: rgba(30,73,255,.22); color:#e0e7ff; }
+
   .actions{ display:flex; justify-content:center; gap:12px; margin-top:8px; }
 
   /* ===== ТАБЛИЦІ — незалежні, ширина за таблицею ===== */
@@ -66,8 +157,12 @@
     overflow-x:auto;
   }
   .upload-card--table table{ width: max-content; border-collapse: collapse; }
-  thead tr{ background:#f9fafb; }
-  th, td{ text-align:left; padding:10px 12px; border-bottom:1px solid rgba(0,0,0,.06); white-space:nowrap; }
+  thead tr{ background: var(--thead-bg); }
+  thead th{ color: var(--thead-text); }
+  th, td{ text-align:left; padding:10px 12px; border-bottom:1px solid var(--divider); white-space:nowrap; }
+  .upload-card--table tbody tr:hover{ background: var(--hover-row); }
+
+  .inline{ display:inline; }
 </style>
 
 <div class="upload-shell">

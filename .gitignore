@@ -213,3 +213,17 @@ node_modules/
 
 # (опційно) VS Code налаштування
 .vscode/
+
+# Windows reserved device names (anywhere, with or without extension)
+**/[Nn][Uu][Ll]
+**/[Nn][Uu][Ll].*
+**/[Cc][Oo][Nn]
+**/[Cc][Oo][Nn].*
+**/[Pp][Rr][Nn]
+**/[Pp][Rr][Nn].*
+**/[Aa][Uu][Xx]
+**/[Aa][Uu][Xx].*
+**/[Cc][Oo][Mm][1-9]
+**/[Cc][Oo][Mm][1-9].*
+**/[Ll][Pp][Tt][1-9]
+**/[Ll][Pp][Tt][1-9].*
