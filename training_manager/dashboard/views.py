@@ -104,7 +104,7 @@ def login_request_code(request):
         form = OTPRequestForm(request.POST)
         if form.is_valid():
             email = form.cleaned_data["email"]
-            user, _ = User.objects.get_or_create(username=email, email=email)
+            user, created = User.objects.get_or_create(username=email, email=email)
 
             code = get_random_string(length=6, allowed_chars="1234567890")
 
@@ -540,7 +540,7 @@ def annotations_api(request, video_id):
     if not isinstance(shapes, list):
         return HttpResponseBadRequest(_("`shapes` має бути списком"))
 
-    ann, _ = AttemptVideoAnnotation.objects.get_or_create(video=video)
+    ann, created = AttemptVideoAnnotation.objects.get_or_create(video=video)
     ann.data = {"shapes": shapes}
     ann.updated_by = request.user
     ann.save(update_fields=["data", "updated_by", "updated_at"])
