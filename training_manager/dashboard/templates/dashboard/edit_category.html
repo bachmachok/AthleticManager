@@ -1,25 +1,19 @@
 {% extends "dashboard/base.html" %}
-{% block title %}Редагувати категорію — Athletic Manager{% endblock %}
+{% load i18n %}
+{% block title %}{% trans "Редагувати категорію — Athletic Manager" %}{% endblock %}
 
 {% block content %}
 <style>
-  /* Та ж «шкіра» форми для узгодженості з темною темою */
   :root{
-    --control-bg: #ffffff;
-    --control-text: #0f172a;
-    --control-border: rgba(15,23,42,.12);
-    --control-disabled-bg: #f1f5f9;
-    --control-disabled-text: #64748b;
-    --select-arrow: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='%235b6b92'%3E%3Cpath fill-rule='evenodd' d='M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.24a.75.75 0 01-1.06 0L5.25 8.29a.75.75 0 01-.02-1.08z' clip-rule='evenodd'/%3E%3C/svg%3E");
+    --control-bg:#ffffff; --control-text:#0f172a; --control-border:rgba(15,23,42,.12);
+    --control-disabled-bg:#f1f5f9; --control-disabled-text:#64748b;
+    --select-arrow:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='%235b6b92'%3E%3Cpath fill-rule='evenodd' d='M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.24a.75.75 0 01-1.06 0L5.25 8.29a.75.75 0 01-.02-1.08z' clip-rule='evenodd'/%3E%3C/svg%3E");
   }
   .dark{
-    --control-bg: rgba(255,255,255,.06);
-    --control-text: #e5e7eb;
-    --control-border: rgba(255,255,255,.18);
-    --control-disabled-bg: rgba(255,255,255,.08);
-    --control-disabled-text: #cbd5e1;
-    --select-arrow: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='%23cbd5e1'%3E%3Cpath fill-rule='evenodd' d='M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.24a.75.75 0 01-1.06 0L5.25 8.29a.75.75 0 01-.02-1.08z' clip-rule='evenodd'/%3E%3C/svg%3E");
-    color-scheme: dark;
+    --control-bg:rgba(255,255,255,.06); --control-text:#e5e7eb; --control-border:rgba(255,255,255,.18);
+    --control-disabled-bg:rgba(255,255,255,.08); --control-disabled-text:#cbd5e1;
+    --select-arrow:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='%23cbd5e1'%3E%3Cpath fill-rule='evenodd' d='M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.24a.75.75 0 01-1.06 0L5.25 8.29a.75.75 0 01-.02-1.08z' clip-rule='evenodd'/%3E%3C/svg%3E");
+    color-scheme:dark;
   }
 
   .form-skin input[type="text"],
@@ -29,42 +23,25 @@
   .form-skin input[type="file"],
   .form-skin select,
   .form-skin textarea{
-    background: var(--control-bg);
-    color: var(--control-text);
-    border: 1px solid var(--control-border);
-    border-radius: .625rem;
-    padding: .5rem .625rem;
+    background:var(--control-bg); color:var(--control-text);
+    border:1px solid var(--control-border); border-radius:.625rem; padding:.5rem .625rem;
   }
   .form-skin input[disabled], .form-skin select[disabled], .form-skin textarea[disabled],
   .form-skin input[readonly], .form-skin select[readonly], .form-skin textarea[readonly]{
-    background: var(--control-disabled-bg);
-    color: var(--control-disabled-text);
-    border-color: var(--control-border);
-    opacity: 1;
-    cursor: not-allowed;
+    background:var(--control-disabled-bg); color:var(--control-disabled-text); border-color:var(--control-border); opacity:1; cursor:not-allowed;
   }
-  .form-skin select{
-    appearance: none;
-    padding-right: 2.25rem;
-    background-image: var(--select-arrow);
-    background-repeat: no-repeat;
-    background-position: right .6rem center;
-    background-size: 16px 16px;
-  }
-  .dark .form-skin select option,
-  .dark .form-skin select optgroup{
-    background:#0f172a; color:#e5e7eb;
-  }
-  .dark .form-skin select option:checked{ background:#1e49ff; color:#fff; }
+  .form-skin select{appearance:none; padding-right:2.25rem; background-image:var(--select-arrow); background-repeat:no-repeat; background-position:right .6rem center; background-size:16px 16px;}
+  .dark .form-skin select option, .dark .form-skin select optgroup{background:#0f172a; color:#e5e7eb;}
+  .dark .form-skin select option:checked{background:#1e49ff; color:#fff;}
 </style>
 
-<h1 class="hidden" aria-hidden="true">Редагувати категорію</h1>
+<h1 class="hidden" aria-hidden="true">{% trans "Редагувати категорію" %}</h1>
 
 <div class="mx-auto w-full max-w-[880px]">
   <article class="card form-skin">
     <header class="px-6 pt-6 pb-3 border-b border-gray-200 dark:border-white/10">
       <h2 class="text-xl md:text-2xl font-semibold flex items-center gap-2">
-        ✏️ Редагувати категорію
+        ✏️ {% trans "Редагувати категорію" %}
       </h2>
     </header>
 
@@ -84,7 +61,7 @@
 
           <div>
             <label for="{{ form.attempt_type.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
-              {{ form.attempt_type.label }} <span class="text-red-600">*</span>
+              {% trans "Тип спроби" %} <span class="text-red-600">*</span>
             </label>
             {{ form.attempt_type }}
             {% if form.attempt_type.errors %}
@@ -96,7 +73,7 @@
 
           <div>
             <label for="{{ form.place.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
-              {{ form.place.label }} <span class="text-red-600">*</span>
+              {% trans "Місце проведення" %} <span class="text-red-600">*</span>
             </label>
             {{ form.place }}
             {% if form.place.errors %}
@@ -108,7 +85,7 @@
 
           <div>
             <label for="{{ form.date.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
-              {{ form.date.label }} <span class="text-red-600">*</span>
+              {% trans "Дата" %} <span class="text-red-600">*</span>
             </label>
             {{ form.date }}
             {% if form.date.errors %}
@@ -120,7 +97,7 @@
 
           <div id="rank-wrapper">
             <label for="{{ form.rank.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
-              {{ form.rank.label }} <span id="rank-required" class="text-red-600">*</span>
+              {% trans "Зайняте місце" %} <span id="rank-required" class="text-red-600">*</span>
             </label>
             {{ form.rank }}
             {% if form.rank.errors %}
@@ -134,15 +111,15 @@
       </div>
 
       <footer class="px-6 pb-6 pt-3 border-t border-gray-200 dark:border-white/10 flex items-center justify-end gap-3">
-        <a href="{% url 'upload' %}" class="btn btn-ghost btn-sm">Відмінити</a>
-        <button type="submit" class="btn btn-primary btn-sm">Зберегти зміни</button>
+        <a href="{% url 'upload' %}" class="btn btn-ghost btn-sm">{% trans "Відмінити" %}</a>
+        <button type="submit" class="btn btn-primary btn-sm">{% trans "Зберегти зміни" %}</button>
       </footer>
     </form>
   </article>
 </div>
 
 <script>
-  // показувати "Зайняте місце" лише для змагальної категорії
+  // Показувати «Зайняте місце» тільки для змагань
   (function () {
     const typeSel  = document.getElementById('id_attempt_type');
     const rankWrap = document.getElementById('rank-wrapper');
@@ -154,10 +131,8 @@
       if (!rankWrap) return;
       rankWrap.style.display = isComp ? '' : 'none';
       if (rankReq) rankReq.style.display = isComp ? '' : 'none';
-      if (rankInp) isComp ? rankInp.setAttribute('required', 'required')
-                          : rankInp.removeAttribute('required');
+      if (rankInp) isComp ? rankInp.setAttribute('required','required') : rankInp.removeAttribute('required');
     }
-
     typeSel?.addEventListener('change', toggleRank);
     toggleRank();
   })();

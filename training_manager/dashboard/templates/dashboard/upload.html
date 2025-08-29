@@ -1,93 +1,67 @@
+{# training_manager/dashboard/templates/dashboard/upload.html #}
 {% extends "dashboard/base.html" %}
-{% load static %}
-{% block title %}Завантаження відео та категорій — Athletic Manager{% endblock %}
+{% load i18n %}
+
+{% block title %}{% trans "Завантаження відео та категорій" %} — Athletic Manager{% endblock %}
 
 {% block content %}
 
+{# Тексти для атрибутів/JS #}
+{% trans "Видалити категорію?" as CONFIRM_DELETE_CATEGORY %}
+{% trans "Видалити відео?" as CONFIRM_DELETE_VIDEO %}
+{% trans "Обовʼязково" as LABEL_REQUIRED %}
+{% trans "Вкладки завантаження" as TABS_ARIA %}
+{% trans "с" as UNIT_S %}
+{% trans "м" as UNIT_M %}
+
 <style>
-  /* ===== ТЕМИ ТА ЗМІННІ ===== */
   :root{
-    --upload-container: 1120px;
-    --card-bg: #fff;
-    --card-elev1: 0 1px 2px rgba(0,0,0,.04), 0 16px 40px rgba(0,0,0,.07);
-    --shell-shadow: 0 1px 2px rgba(0,0,0,.04), 0 8px 24px rgba(0,0,0,.06);
-    --muted: #4b5563;
-    --thead-bg:#f9fafb;
-    --thead-text:#374151;
-    --divider: rgba(0,0,0,.06);
-    --hover-row: rgba(0,0,0,.02);
-    --control-bg:#ffffff;
-    --control-border: rgba(15,23,42,.12);
-    --control-text:#0f172a;
-    color-scheme: light;
+    --upload-container:1120px; --card-bg:#fff;
+    --card-elev1:0 1px 2px rgba(0,0,0,.04),0 16px 40px rgba(0,0,0,.07);
+    --shell-shadow:0 1px 2px rgba(0,0,0,.04),0 8px 24px rgba(0,0,0,.06);
+    --muted:#4b5563; --thead-bg:#f9fafb; --thead-text:#374151;
+    --divider:rgba(0,0,0,.06); --hover-row:rgba(0,0,0,.02);
+    --control-bg:#fff; --control-border:rgba(15,23,42,.12); --control-text:#0f172a;
+    color-scheme:light;
   }
   .dark{
-    --card-bg: rgba(255,255,255,.06);
-    --card-elev1: 0 1px 2px rgba(0,0,0,.25), 0 16px 40px rgba(0,0,0,.35);
-    --shell-shadow: 0 1px 2px rgba(0,0,0,.25), 0 8px 24px rgba(0,0,0,.35);
-    --muted: #e5e7eb;
-    --thead-bg: rgba(255,255,255,.05);
-    --thead-text: #e5e7eb;
-    --divider: rgba(255,255,255,.12);
-    --hover-row: rgba(255,255,255,.05);
-    --control-bg: rgba(255,255,255,.06);
-    --control-border: rgba(255,255,255,.18);
-    --control-text: #f5f5f6;
-    /* ВАЖЛИВО: дає системним контролам (у т.ч. відкритому списку <select>) темне оформлення */
-    color-scheme: dark;
+    --card-bg:rgba(255,255,255,.06);
+    --card-elev1:0 1px 2px rgba(0,0,0,.25),0 16px 40px rgba(0,0,0,.35);
+    --shell-shadow:0 1px 2px rgba(0,0,0,.25),0 8px 24px rgba(0,0,0,.35);
+    --muted:#e5e7eb; --thead-bg:rgba(255,255,255,.05); --thead-text:#e5e7eb;
+    --divider:rgba(255,255,255,.12); --hover-row:rgba(255,255,255,.05);
+    --control-bg:rgba(255,255,255,.06); --control-border:rgba(255,255,255,.18);
+    --control-text:#f5f5f6; color-scheme:dark;
   }
 
-  /* ===== СТАБІЛЬНЕ ПОЛОТНО І ЦЕНТР ===== */
-  .upload-shell{ max-width: var(--upload-container); margin-inline:auto; }
-  .page-title{ text-align:center; margin:0 0 18px 0; }
+  .upload-shell{max-width:var(--upload-container);margin-inline:auto;}
+  .page-title{text-align:center;margin:0 0 18px;}
 
-  /* вкладки — фіксована «пігулка», по центру */
-  .tabs-wrap{ display:flex; justify-content:center; margin-bottom:18px; }
+  .tabs-wrap{display:flex;justify-content:center;margin-bottom:18px;}
   .tabs{
-    display:grid; grid-template-columns: 1fr 1fr; gap:8px; width:520px; padding:6px;
-    border-radius:12px; background: var(--card-bg);
-    box-shadow: var(--shell-shadow);
-    backdrop-filter: saturate(120%) blur(2px);
+    display:grid;grid-template-columns:1fr 1fr;gap:8px;width:520px;padding:6px;
+    border-radius:12px;background:var(--card-bg);box-shadow:var(--shell-shadow);
+    backdrop-filter:saturate(120%) blur(2px);
   }
   .tabs button{
-    border:none; border-radius:10px; padding:10px 16px; font-weight:600; line-height:1; cursor:pointer;
-    transition: transform .06s, box-shadow .15s, background .15s, color .15s;
-    background:transparent; color:inherit;
+    border:0;border-radius:10px;padding:10px 16px;font-weight:600;line-height:1;
+    cursor:pointer;transition:transform .06s, box-shadow .15s, background .15s, color .15s;
+    background:transparent;color:inherit;
   }
-  .tabs button:hover{ transform: translateY(-1px); }
-  .tabs button[aria-selected="true"]{ background:#1e49ff; color:#fff; box-shadow:0 6px 18px rgba(30,73,255,.35); }
-  .tabs button:focus-visible{ outline:2px solid #1e49ff; outline-offset:2px; }
+  .tabs button:hover{transform:translateY(-1px);}
+  .tabs button[aria-selected="true"]{background:#1e49ff;color:#fff;box-shadow:0 6px 18px rgba(30,73,255,.35);}
+  .tabs button:focus-visible{outline:2px solid #1e49ff;outline-offset:2px;}
 
-  /* ===== СТЕК БЛОКІВ: кожен по центру, ширина за контентом ===== */
-  .block-stack{ display:flex; flex-direction:column; align-items:center; gap:24px; }
+  .block-stack{display:flex;flex-direction:column;align-items:center;gap:24px;}
+  .upload-card{display:inline-block;max-width:100%;border-radius:16px;background:var(--card-bg);box-shadow:var(--card-elev1);padding:28px;}
+  .card-title{text-align:center;font-weight:700;font-size:22px;margin:4px 0 22px;}
 
-  /* базова картка — inline-block, тож не тягнеться на всю ширину */
-  .upload-card{
-    display:inline-block; max-width:100%;
-    border-radius:16px; background: var(--card-bg);
-    box-shadow: var(--card-elev1);
-    padding:28px;
-  }
-  .card-title{ text-align:center; font-weight:700; font-size:22px; margin:4px 0 22px; }
+  .upload-card--form .form-grid{display:grid;grid-template-columns:max-content max-content;gap:22px 44px;}
+  @media (max-width:900px){.upload-card--form .form-grid{grid-template-columns:max-content;}}
+  .field label{display:block;margin-bottom:6px;font-size:14px;color:var(--muted);}
+  .control>*{width:auto;max-width:340px;min-width:200px;}
+  .control.control--wide>*{max-width:520px;min-width:240px;}
 
-  /* ===== ФОРМА — контент вирішує ширину ===== */
-  .upload-card--form .form-grid{
-    display:grid;
-    grid-template-columns: max-content max-content; /* не розтягуємося */
-    gap:22px 44px;
-  }
-  @media (max-width: 900px){
-    .upload-card--form .form-grid{ grid-template-columns: max-content; }
-  }
-  .field label{ display:block; margin-bottom:6px; font-size:14px; color: var(--muted); }
-  .control > *{
-    width:auto;            /* більше не 100% */
-    max-width:340px;       /* запобігає монструозним елементам */
-    min-width:200px;       /* щоб не було надто вузько */
-  }
-  .control.control--wide > *{ max-width:520px; min-width:240px; }
-
-  /* інпути/селекти у світлій/темній темі */
   .upload-card input[type="text"],
   .upload-card input[type="number"],
   .upload-card input[type="time"],
@@ -95,87 +69,58 @@
   .upload-card input[type="file"],
   .upload-card select,
   .upload-card textarea{
-    background: var(--control-bg);
-    color: var(--control-text);
-    border: 1px solid var(--control-border);
-    border-radius: 10px;
-    padding: 8px 10px;
+    background:var(--control-bg);color:var(--control-text);border:1px solid var(--control-border);
+    border-radius:10px;padding:8px 10px;
   }
-
-  /* ===== СЕЛЕКТИ: фікс стрілки + темна випадайка ===== */
   .upload-card select{
-    -webkit-appearance:none;
-    -moz-appearance:none;
-    appearance:none;
-    padding-right: 2.25rem; /* місце під стрілку */
-    background-repeat: no-repeat;
-    background-position: right .6rem center;
-    background-size: 16px 16px;
-    /* світла стрілка */
+    appearance:none;padding-right:2.25rem;background-repeat:no-repeat;background-position:right .6rem center;background-size:16px 16px;
     background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='%235b6b92'%3E%3Cpath fill-rule='evenodd' d='M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.24a.75.75 0 01-1.06 0L5.25 8.29a.75.75 0 01-.02-1.08z' clip-rule='evenodd'/%3E%3C/svg%3E");
   }
   .dark .upload-card select{
-    /* темна стрілка */
     background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='%23cbd5e1'%3E%3Cpath fill-rule='evenodd' d='M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.24a.75.75 0 01-1.06 0L5.25 8.29a.75.75 0 01-.02-1.08z' clip-rule='evenodd'/%3E%3C/svg%3E");
   }
-  /* У деяких браузерах можна задати фон опцій (коли меню відкрите) */
-  .dark .upload-card select option,
-  .dark .upload-card select optgroup{
-    background-color:#0f172a; /* gray-900 */
-    color:#e5e7eb;            /* gray-200 */
-  }
-  .dark .upload-card select option:checked{ background-color:#1e49ff; color:#fff; }
-  /* Попросимо браузер рендерити темні нативні елементи */
-  .dark select, .dark input, .dark textarea { color-scheme: dark; }
+  .dark .upload-card select option,.dark .upload-card select optgroup{background-color:#0f172a;color:#e5e7eb;}
+  .dark .upload-card select option:checked{background-color:#1e49ff;color:#fff;}
+  .dark select,.dark input,.dark textarea{color-scheme:dark;}
 
   .upload-card input[type="file"]::-webkit-file-upload-button,
   .upload-card input[type="file"]::file-selector-button{
-    background: rgba(30,73,255,.08);
-    border: 1px solid var(--control-border);
-    border-radius: 8px;
-    padding: 6px 10px;
-    cursor: pointer;
+    background:rgba(30,73,255,.08);border:1px solid var(--control-border);border-radius:8px;padding:6px 10px;cursor:pointer;
   }
   .dark .upload-card input[type="file"]::file-selector-button{
-    background: rgba(30,73,255,.18);
-    border-color: rgba(255,255,255,.18);
-    color:#e5e7eb;
+    background:rgba(30,73,255,.18);border-color:rgba(255,255,255,.18);color:#e5e7eb;
   }
 
-  .unit-badge{
-    display:inline-block; margin-left:6px; padding:2px 8px; font-size:11px;
-    border-radius:999px; background:#eef2ff; color:#1e49ff; vertical-align:middle;
+  .unit-badge{display:inline-block;margin-left:6px;padding:2px 8px;font-size:11px;border-radius:999px;background:#eef2ff;color:#1e49ff;vertical-align:middle;}
+  .dark .unit-badge{background:rgba(30,73,255,.22);color:#e0e7ff;}
+
+  .actions{display:flex;justify-content:center;gap:12px;margin-top:8px;}
+
+  .upload-card--table .table-wrap{display:inline-block;max-width:min(100vw - 48px, var(--upload-container));overflow-x:auto;}
+  .upload-card--table table{width:max-content;border-collapse:collapse;}
+  thead tr{background:var(--thead-bg);} thead th{color:var(--thead-text);}
+  th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--divider);white-space:nowrap;}
+  .upload-card--table tbody tr:hover{background:var(--hover-row);}
+  .inline{display:inline;}
+
+  /* доступно прихований інпут для кастомної кнопки */
+  .visually-hidden-input{
+    position:absolute !important;clip:rect(0 0 0 0) !important;clip-path:inset(50%) !important;width:1px !important;height:1px !important;
+    padding:0 !important;margin:-1px !important;overflow:hidden !important;border:0 !important;white-space:nowrap !important;
   }
-  .dark .unit-badge{ background: rgba(30,73,255,.22); color:#e0e7ff; }
-
-  .actions{ display:flex; justify-content:center; gap:12px; margin-top:8px; }
-
-  /* ===== ТАБЛИЦІ — незалежні, ширина за таблицею ===== */
-  .upload-card--table .table-wrap{
-    display:inline-block;              /* картка підхоплює ширину контенту */
-    max-width: min(100vw - 48px, var(--upload-container)); /* але не виходимо за в’юпорт */
-    overflow-x:auto;
-  }
-  .upload-card--table table{ width: max-content; border-collapse: collapse; }
-  thead tr{ background: var(--thead-bg); }
-  thead th{ color: var(--thead-text); }
-  th, td{ text-align:left; padding:10px 12px; border-bottom:1px solid var(--divider); white-space:nowrap; }
-  .upload-card--table tbody tr:hover{ background: var(--hover-row); }
-
-  .inline{ display:inline; }
 </style>
 
 <div class="upload-shell">
 
   <h1 class="page-title text-2xl md:text-3xl font-semibold tracking-tight">
-    ⤴️ Завантаження відео та категорій
+    ⤴️ {% trans "Завантаження відео та категорій" %}
   </h1>
 
   <!-- ВКЛАДКИ -->
   <div class="tabs-wrap">
-    <div class="tabs" role="tablist" aria-label="Вкладки завантаження">
-      <button type="button" class="tab-btn" data-tab="categories" aria-selected="true"  aria-controls="tab-categories">Категорії спроб</button>
-      <button type="button" class="tab-btn" data-tab="videos"      aria-selected="false" aria-controls="tab-videos">Відео проб</button>
+    <div class="tabs" role="tablist" aria-label="{{ TABS_ARIA }}">
+      <button type="button" role="tab" class="tab-btn" data-tab="categories" aria-selected="true"  aria-controls="tab-categories">{% trans "Категорії спроб" %}</button>
+      <button type="button" role="tab" class="tab-btn" data-tab="videos"      aria-selected="false" aria-controls="tab-videos">{% trans "Відео спроб" %}</button>
     </div>
   </div>
 
@@ -183,9 +128,9 @@
   <section id="tab-categories" class="tab-pane">
     <div class="block-stack">
 
-      <!-- ФОРМА (вузька, по контенту) -->
+      <!-- ФОРМА -->
       <article class="upload-card upload-card--form">
-        <h2 class="card-title">Додати / Редагувати категорію</h2>
+        <h2 class="card-title">{% trans "Додати / Редагувати категорію" %}</h2>
         <form method="post" novalidate>
           {% csrf_token %}
           <div class="form-grid">
@@ -207,20 +152,24 @@
             </div>
           </div>
           <div class="actions">
-            <button name="create_category" type="submit" class="btn btn-primary">Зберегти категорію</button>
-            <a class="btn btn-ghost" href="{% url 'upload' %}">Скинути</a>
+            <button name="create_category" type="submit" class="btn btn-primary">{% trans "Зберегти категорію" %}</button>
+            <a class="btn btn-ghost" href="{% url 'upload' %}">{% trans "Скинути" %}</a>
           </div>
         </form>
       </article>
 
-      <!-- ТАБЛИЦЯ (широка, але незалежна) -->
+      <!-- ТАБЛИЦЯ -->
       <article class="upload-card upload-card--table">
-        <h3 class="card-title">Існуючі категорії</h3>
+        <h3 class="card-title">{% trans "Існуючі категорії" %}</h3>
         <div class="table-wrap">
           <table>
             <thead>
               <tr>
-                <th>Тип спроби</th><th>Місце</th><th>Дата</th><th>Зайняте місце</th><th style="width:210px">Дії</th>
+                <th>{% trans "Тип спроби" %}</th>
+                <th>{% trans "Місце" %}</th>
+                <th>{% trans "Дата" %}</th>
+                <th>{% trans "Зайняте місце" %}</th>
+                <th style="width:210px">{% trans "Дії" %}</th>
               </tr>
             </thead>
             <tbody>
@@ -231,15 +180,16 @@
                   <td>{{ cat.date }}</td>
                   <td>{% if cat.rank %}{{ cat.rank }}{% else %}—{% endif %}</td>
                   <td>
-                    <a href="{% url 'edit_category' cat.id %}" class="btn btn-ghost btn-sm">Редагувати</a>
-                    <form method="post" action="{% url 'delete_category' cat.id %}" class="inline" onsubmit="return confirm('Видалити категорію?');">
+                    <a href="{% url 'edit_category' cat.id %}" class="btn btn-ghost btn-sm">{% trans "Редагувати" %}</a>
+                    <form method="post" action="{% url 'delete_category' cat.id %}" class="inline"
+                          onsubmit="return confirm('{{ CONFIRM_DELETE_CATEGORY|escapejs }}');">
                       {% csrf_token %}
-                      <button class="btn btn-danger btn-sm" type="submit">Видалити</button>
+                      <button class="btn btn-danger btn-sm" type="submit">{% trans "Видалити" %}</button>
                     </form>
                   </td>
                 </tr>
               {% empty %}
-                <tr><td colspan="5">Категорій немає</td></tr>
+                <tr><td colspan="5">{% trans "Категорій немає" %}</td></tr>
               {% endfor %}
             </tbody>
           </table>
@@ -253,9 +203,9 @@
   <section id="tab-videos" class="tab-pane" hidden>
     <div class="block-stack">
 
-      <!-- ФОРМА (вузька, по контенту) -->
+      <!-- ФОРМА -->
       <article class="upload-card upload-card--form">
-        <h2 class="card-title">Додати / Редагувати відео проби</h2>
+        <h2 class="card-title">{% trans "Додати / Редагувати відео проби" %}</h2>
         <form method="post" enctype="multipart/form-data" novalidate>
           {% csrf_token %}
           <div class="form-grid">
@@ -285,28 +235,69 @@
               <label for="{{ video_form.time.id_for_label }}">{{ video_form.time.label }}</label>
               <div class="control" style="max-width:180px">{{ video_form.time }}</div>
             </div>
+
+            {# ===== КАСТОМНИЙ ВИБІР ФАЙЛУ (локалізований) ===== #}
             <div class="field" style="grid-column:1 / -1;">
               <label for="{{ video_form.video.id_for_label }}">
-                {{ video_form.video.label }}{% if video_form.video.field.required %}<span class="unit-badge" style="background:#fee2e2;color:#991b1b;margin-left:8px">Обовʼязково</span>{% endif %}
+                {{ video_form.video.label }}{% if video_form.video.field.required %}
+                  <span class="unit-badge" style="background:#fee2e2;color:#991b1b;margin-left:8px">{{ LABEL_REQUIRED }}</span>
+                {% endif %}
               </label>
-              <div class="control control--wide">{{ video_form.video }}</div>
+
+              {# реальний інпут прихований — саме він відправляє файл у Django #}
+              <input
+                type="file"
+                name="{{ video_form.video.html_name }}"
+                id="{{ video_form.video.id_for_label }}"
+                accept="video/*"
+                class="visually-hidden-input"
+                {% if video_form.video.field.required %}required{% endif %}
+              >
+
+              <div class="control control--wide">
+                <div class="flex items-center gap-3">
+                  <button type="button" id="pick-video-btn-upl" class="btn btn-secondary btn-sm" aria-controls="{{ video_form.video.id_for_label }}">
+                    {% trans "Обрати файл" %}
+                  </button>
+                  <span id="picked-video-name-upl"
+                        class="text-sm text-gray-600 dark:text-gray-300"
+                        data-empty="{% trans 'Файл не вибрано' %}"
+                        aria-live="polite">
+                    {% trans "Файл не вибрано" %}
+                  </span>
+                </div>
+              </div>
+
+              {% if video_form.video.errors %}
+                <ul class="mt-1 text-xs text-red-600 dark:text-red-400 space-y-0.5">
+                  {% for err in video_form.video.errors %}<li>{{ err }}</li>{% endfor %}
+                </ul>
+              {% endif %}
             </div>
+            {# ===== /КАСТОМНИЙ ВИБІР ФАЙЛУ ===== #}
+
           </div>
           <div class="actions">
-            <button name="add_video" type="submit" class="btn btn-primary">Додати відео</button>
-            <a class="btn btn-ghost" href="{% url 'upload' %}">Скинути</a>
+            <button name="add_video" type="submit" class="btn btn-primary">{% trans "Додати відео" %}</button>
+            <a class="btn btn-ghost" href="{% url 'upload' %}">{% trans "Скинути" %}</a>
           </div>
         </form>
       </article>
 
-      <!-- ТАБЛИЦЯ (широка, але незалежна) -->
+      <!-- ТАБЛИЦЯ -->
       <article class="upload-card upload-card--table">
-        <h3 class="card-title">Існуючі відео</h3>
+        <h3 class="card-title">{% trans "Існуючі відео" %}</h3>
         <div class="table-wrap">
           <table>
             <thead>
               <tr>
-                <th>Категорія</th><th>Подія</th><th>Спроба №</th><th>Результат</th><th>Місце (протокол)</th><th>Час</th><th style="width:210px">Дії</th>
+                <th>{% trans "Категорія" %}</th>
+                <th>{% trans "Подія" %}</th>
+                <th>{% trans "Спроба №" %}</th>
+                <th>{% trans "Результат" %}</th>
+                <th>{% trans "Місце (протокол)" %}</th>
+                <th>{% trans "Час" %}</th>
+                <th style="width:210px">{% trans "Дії" %}</th>
               </tr>
             </thead>
             <tbody>
@@ -319,15 +310,16 @@
                   <td>{% if video.place_in_protocol %}{{ video.place_in_protocol }}{% else %}—{% endif %}</td>
                   <td>{% if video.time %}{{ video.time }}{% else %}—{% endif %}</td>
                   <td>
-                    <a href="{% url 'edit_video' video.id %}" class="btn btn-ghost btn-sm">Редагувати</a>
-                    <form method="post" action="{% url 'delete_video' video.id %}" class="inline" onsubmit="return confirm('Видалити відео?');">
+                    <a href="{% url 'edit_video' video.id %}" class="btn btn-ghost btn-sm">{% trans "Редагувати" %}</a>
+                    <form method="post" action="{% url 'delete_video' video.id %}" class="inline"
+                          onsubmit="return confirm('{{ CONFIRM_DELETE_VIDEO|escapejs }}');">
                       {% csrf_token %}
-                      <button class="btn btn-danger btn-sm" type="submit">Видалити</button>
+                      <button class="btn btn-danger btn-sm" type="submit">{% trans "Видалити" %}</button>
                     </form>
                   </td>
                 </tr>
               {% empty %}
-                <tr><td colspan="7">Відео немає</td></tr>
+                <tr><td colspan="7">{% trans "Відео немає" %}</td></tr>
               {% endfor %}
             </tbody>
           </table>
@@ -342,43 +334,60 @@
 </div>
 
 <script>
+  // локалізовані константи з шаблону
+  const UNIT_S = "{{ UNIT_S|escapejs }}";
+  const UNIT_M = "{{ UNIT_M|escapejs }}";
+
   // вкладки
   (function(){
-    const tabs = document.querySelectorAll('.tab-btn');
-    const panes={ categories:document.getElementById('tab-categories'), videos:document.getElementById('tab-videos') };
+    const tabs=document.querySelectorAll('.tab-btn');
+    const panes={categories:document.getElementById('tab-categories'),videos:document.getElementById('tab-videos')};
     function setActive(name){
-      tabs.forEach(b=>b.setAttribute('aria-selected', b.dataset.tab===name ? 'true':'false'));
-      Object.entries(panes).forEach(([k,el])=> el.hidden = (k!==name));
+      tabs.forEach(b=>b.setAttribute('aria-selected',b.dataset.tab===name?'true':'false'));
+      Object.entries(panes).forEach(([k,el])=>el.hidden=(k!==name));
       history.replaceState(null,'','#'+name);
     }
-    tabs.forEach(b=> b.addEventListener('click', ()=> setActive(b.dataset.tab)));
-    const initial=(location.hash||'#videos').replace('#',''); setActive(panes[initial]?initial:'videos');
+    tabs.forEach(b=>b.addEventListener('click',()=>setActive(b.dataset.tab)));
+    const initial=(location.hash||'#videos').replace('#','');
+    setActive(panes[initial]?initial:'videos');
   })();
 
-  // одиниці біля "Результат"
+  // одиниці біля «Результат»
   (function(){
     const eventSel=document.getElementById('id_event_type');
     const unit=document.getElementById('unit-badge');
-    function updateUnit(){ if(eventSel && unit){ unit.textContent=(eventSel.value==='run')?'с':'м'; } }
-    eventSel?.addEventListener('change', updateUnit); updateUnit();
+    function update(){ if(eventSel && unit){ unit.textContent=(eventSel.value==='run')?UNIT_S:UNIT_M; } }
+    eventSel?.addEventListener('change',update); update();
   })();
 
-  // «Місце в протоколі»/«Зайняте місце» лише для змагань
+  // «Місце в протоколі» / «Зайняте місце» лише для змагань
   (function(){
     const catSel=document.getElementById('id_category');
     const vipWrap=document.getElementById('vip-wrapper');
     const rankFld=document.getElementById('rank-field');
     const typeById={};
     const metaEl=document.getElementById('categories-meta');
-    if(metaEl){ try{ JSON.parse(metaEl.textContent).forEach(x=> typeById[String(x.id)]=x.attempt_type ); }catch(e){} }
+    if(metaEl){ try{ JSON.parse(metaEl.textContent).forEach(x=>typeById[String(x.id)]=x.attempt_type); }catch(e){} }
     function toggle(){
       if(catSel && vipWrap){ const t=typeById[String(catSel.value||'')]; vipWrap.style.display=(t==='competition')?'':'none'; }
       const tSel=document.getElementById('id_attempt_type');
       if(tSel && rankFld){ rankFld.style.display=(tSel.value==='competition')?'':'none'; }
     }
-    catSel?.addEventListener('change', toggle);
-    document.getElementById('id_attempt_type')?.addEventListener('change', toggle);
+    catSel?.addEventListener('change',toggle);
+    document.getElementById('id_attempt_type')?.addEventListener('change',toggle);
     toggle();
+  })();
+
+  // кастомна локалізована кнопка вибору відео
+  (function(){
+    const fileInput=document.getElementById('{{ video_form.video.id_for_label }}');
+    const pickBtn=document.getElementById('pick-video-btn-upl');
+    const fileName=document.getElementById('picked-video-name-upl');
+    pickBtn?.addEventListener('click',()=>fileInput?.click());
+    fileInput?.addEventListener('change',()=>{
+      if(!fileName) return;
+      fileName.textContent=(fileInput.files && fileInput.files.length)?fileInput.files[0].name:(fileName.dataset.empty||'');
+    });
   })();
 </script>
 

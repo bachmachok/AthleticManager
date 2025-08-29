@@ -1,10 +1,12 @@
+{# training_manager/dashboard/templates/dashboard/login.html #}
 {% extends "dashboard/base.html" %}
+{% load i18n %}
 
-{% block title %}Вхід — Athletic Manager{% endblock %}
+{% block title %}{% trans "Вхід" %} — Athletic Manager{% endblock %}
 
 {% block content %}
   <h1 class="text-2xl md:text-3xl font-semibold tracking-tight mb-6 text-center">
-    Вхід до системи
+    {% trans "Вхід до системи" %}
   </h1>
 
   <article class="card max-w-md mx-auto">
@@ -27,7 +29,7 @@
         {# Поле email #}
         <div class="space-y-1.5">
           <label for="{{ form.email.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-200">
-            Електронна пошта{% if form.email.field.required %}<span class="text-red-600">*</span>{% endif %}
+            {% trans "Електронна пошта" %}{% if form.email.field.required %}<span class="text-red-600">*</span>{% endif %}
           </label>
 
           <input
@@ -37,7 +39,7 @@
             value="{{ form.email.value|default_if_none:'' }}"
             {% if form.email.field.required %}required{% endif %}
             autocomplete="email"
-            placeholder="your@email.com"
+            placeholder="{% trans 'your@email.com' %}"
             class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm
                    focus:outline-none focus:ring-2 focus:ring-brand-500
                    dark:bg-gray-800 dark:border-gray-700 dark:text-gray-100" />
@@ -51,17 +53,17 @@
           {% endif %}
 
           <p class="text-xs text-gray-500 dark:text-gray-400">
-            Введіть свій email, і ми надішлемо одноразовий код для входу.
+            {% trans "Введіть свій email, і ми надішлемо одноразовий код для входу." %}
           </p>
         </div>
       </div>
 
       <div class="px-6 pb-6 space-y-3">
         <button type="submit" class="btn btn-primary w-full justify-center">
-          Отримати код
+          {% trans "Отримати код" %}
         </button>
         <a href="{% url 'index' %}" class="btn btn-ghost w-full justify-center">
-          Повернутися на головну
+          {% trans "Повернутися на головну" %}
         </a>
       </div>
     </form>

@@ -1,29 +1,36 @@
 {% extends "dashboard/base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Анотації" %}{% endblock %}
+
 {% block content %}
-<h1>Анотації</h1>
+<h1 class="text-2xl md:text-3xl font-semibold tracking-tight mb-4">{% trans "Анотації" %}</h1>
+
 <table class="table">
   <thead>
     <tr>
-      <th>Дата</th>
-      <th>Місце</th>
-      <th>Дисципліна</th>
-      <th>Спроба</th>
-      <th>Дія</th>
+      <th>{% trans "Дата" %}</th>
+      <th>{% trans "Місце" %}</th>
+      <th>{% trans "Дисципліна" %}</th>
+      <th>{% trans "Спроба" %}</th>
+      <th>{% trans "Дія" %}</th>
     </tr>
   </thead>
   <tbody>
     {% for video in videos %}
     <tr>
-      <td>{{ video.category.date }}</td>
+      <td>{{ video.category.date|date:"SHORT_DATE_FORMAT" }}</td>
       <td>{{ video.category.place }}</td>
       <td>{{ video.get_event_type_display }}</td>
-      <td>#{{ video.attempt_number }}</td>
+      <td>{% blocktrans with n=video.attempt_number %}#{{ n }}{% endblocktrans %}</td>
       <td>
-        <a class="btn btn-sm" href="{% url 'annotate_video' video.id %}">Анотувати</a>
+        <a class="btn btn-sm" href="{% url 'annotate_video' video.id %}">{% trans "Анотувати" %}</a>
       </td>
     </tr>
     {% empty %}
-    <tr><td colspan="5">Поки що немає відео.</td></tr>
+    <tr>
+      <td colspan="5">{% trans "Поки що немає відео." %}</td>
+    </tr>
     {% endfor %}
   </tbody>
 </table>

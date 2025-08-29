@@ -1,3 +1,4 @@
+{% load i18n %}
 <footer class="mt-0">
   <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
 
@@ -11,22 +12,24 @@
       <section class="min-w-0">
         <h3 class="text-lg md:text-xl font-semibold">Athletic Manager</h3>
         <p class="mt-3 text-sm md:text-[15px] leading-relaxed text-gray-600 dark:text-gray-300 text-justify">
-          Платформа для керування спортивними тренуваннями та ресурсами. Допомагає тренерам і
-          спортсменам залишатися організованими та досягати цілей.
+          {% blocktrans trimmed %}
+          Платформа для керування спортивними тренуваннями та ресурсами. Допомагає тренерам і спортсменам
+          залишатися організованими та досягати цілей.
+          {% endblocktrans %}
         </p>
         <span
           class="inline-flex items-center mt-4 rounded-full bg-brand-600 px-3 py-1
                  text-[11px] md:text-xs font-semibold text-white">
-          Версія: v1.0.0
+          {% trans "Версія:" %} {{ app_version|default:"v1.0.0" }}
         </span>
       </section>
 
       <!-- Resources -->
       <section class="min-w-0">
-        <h4 class="text-base md:text-lg font-semibold">Ресурси</h4>
+        <h4 class="text-base md:text-lg font-semibold">{% trans "Ресурси" %}</h4>
         <ul class="mt-3 space-y-2">
           <li class="flex items-center gap-2 text-sm md:text-[15px]">
-            <span>🐙</span><a href="#" class="hover:text-brand-600">GitHub проєкту</a>
+            <span>🐙</span><a href="#" class="hover:text-brand-600">{% trans "GitHub проєкту" %}</a>
           </li>
           <li class="flex items-center gap-2 text-sm md:text-[15px]">
             <span>🦄</span>
@@ -38,14 +41,14 @@
           </li>
           <li class="flex items-center gap-2 text-sm md:text-[15px]">
             <span>📚</span>
-            <a href="https://developer.mozilla.org/" target="_blank" rel="noopener" class="hover:text-brand-600">Документація MDN</a>
+            <a href="https://developer.mozilla.org/" target="_blank" rel="noopener" class="hover:text-brand-600">{% trans "Документація MDN" %}</a>
           </li>
         </ul>
       </section>
 
       <!-- Contacts -->
       <section class="min-w-0">
-        <h4 class="text-base md:text-lg font-semibold">Контакти</h4>
+        <h4 class="text-base md:text-lg font-semibold">{% trans "Контакти" %}</h4>
         <ul class="mt-3 space-y-2">
           <li class="flex items-center gap-2 text-sm md:text-[15px]">
             <span>📧</span>
@@ -61,9 +64,11 @@
 
     <!-- Тонка лінія та приписка -->
     <div class="border-t border-gray-200 dark:border-white/10"></div>
+    {% now "Y" as current_year %}
     <div class="py-4 text-center text-[11px] md:text-xs text-gray-500 dark:text-gray-400">
-      © {{ now|date:"Y" }} Athletic Manager. Усі права захищені. Розроблено з ❤️ на
-      <span class="font-medium">Django</span> та <span class="font-medium">Tailwind CSS</span>.
+      {% blocktrans trimmed with year=current_year fw1="Django" fw2="Tailwind CSS" %}
+      © {{ year }} Athletic Manager. Усі права захищені. Розроблено з ❤️ на {{ fw1 }} та {{ fw2 }}.
+      {% endblocktrans %}
     </div>
 
   </div>

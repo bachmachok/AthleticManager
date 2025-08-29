@@ -1,7 +1,8 @@
 {# training_manager/dashboard/templates/dashboard/library.html #}
 {% extends "dashboard/base.html" %}
+{% load i18n %}
 
-{% block title %}Бібліотека — Athletic Manager{% endblock %}
+{% block title %}{% trans "Бібліотека" %} — Athletic Manager{% endblock %}
 
 {% block content %}
 
@@ -70,7 +71,7 @@
   }
 </style>
 
-  <h1 class="text-2xl md:text-3xl font-semibold tracking-tight mb-6">🎥 Бібліотека відео</h1>
+  <h1 class="text-2xl md:text-3xl font-semibold tracking-tight mb-6">🎥 {% trans "Бібліотека відео" %}</h1>
 
   <!-- Фільтри + сортування -->
   <article class="card mb-6">
@@ -78,10 +79,10 @@
 
       {# Тип категорії як пігулки #}
       <fieldset>
-        <legend class="mb-2 text-sm font-medium text-gray-700 dark:text-gray-200">Категорія</legend>
+        <legend class="mb-2 text-sm font-medium text-gray-700 dark:text-gray-200">{% trans "Категорія" %}</legend>
         <div class="seg" id="seg-type">
           <label class="seg__item {% if not filter_attempt_type %}seg__item--active{% endif %}">
-            <span class="seg__icon">✨</span> Усі
+            <span class="seg__icon">✨</span> {% trans "Усі" %}
             <input type="radio" name="attempt_type" value="" {% if not filter_attempt_type %}checked{% endif %}>
           </label>
 
@@ -97,31 +98,31 @@
 
       {# Сортування категорій як пігулки (без типу та місця) #}
       <fieldset>
-        <legend class="mb-2 text-sm font-medium text-gray-700 dark:text-gray-200">Сортування</legend>
+        <legend class="mb-2 text-sm font-medium text-gray-700 dark:text-gray-200">{% trans "Сортування" %}</legend>
         <div class="seg" id="seg-sort">
           <label class="seg__item {% if sort == 'date_desc' %}seg__item--active{% endif %}">
-            <span class="seg__icon">🆕</span> Дата (новіші)
+            <span class="seg__icon">🆕</span> {% trans "Дата (новіші)" %}
             <input type="radio" name="sort" value="date_desc" {% if sort == 'date_desc' %}checked{% endif %}>
           </label>
           <label class="seg__item {% if sort == 'date_asc' %}seg__item--active{% endif %}">
-            <span class="seg__icon">📅</span> Дата (старіші)
+            <span class="seg__icon">📅</span> {% trans "Дата (старіші)" %}
             <input type="radio" name="sort" value="date_asc" {% if sort == 'date_asc' %}checked{% endif %}>
           </label>
 
           <label class="seg__item {% if sort == 'videos_desc' %}seg__item--active{% endif %}">
-            <span class="seg__icon">▶️</span> К-сть відео ↓
+            <span class="seg__icon">▶️</span> {% trans "К-сть відео ↓" %}
             <input type="radio" name="sort" value="videos_desc" {% if sort == 'videos_desc' %}checked{% endif %}>
           </label>
           <label class="seg__item {% if sort == 'videos_asc' %}seg__item--active{% endif %}">
-            <span class="seg__icon">▶️</span> К-сть відео ↑
+            <span class="seg__icon">▶️</span> {% trans "К-сть відео ↑" %}
             <input type="radio" name="sort" value="videos_asc" {% if sort == 'videos_asc' %}checked{% endif %}>
           </label>
         </div>
       </fieldset>
 
       <div class="flex md:justify-end gap-2">
-        <button type="submit" class="btn btn-secondary btn-sm">Застосувати</button>
-        <a href="{% url 'library' %}" class="btn btn-sm">Скинути</a>
+        <button type="submit" class="btn btn-secondary btn-sm">{% trans "Застосувати" %}</button>
+        <a href="{% url 'library' %}" class="btn btn-sm">{% trans "Скинути" %}</a>
       </div>
     </form>
   </article>
@@ -132,11 +133,11 @@
         <table class="min-w-full text-sm">
           <thead class="bg-gray-100/70 dark:bg-white/5 text-gray-700 dark:text-gray-200">
             <tr>
-              <th class="px-4 py-3 text-left font-semibold">Тип</th>
-              <th class="px-4 py-3 text-left font-semibold">Місце</th>
-              <th class="px-4 py-3 text-left font-semibold">Дата</th>
-              <th class="px-4 py-3 text-left font-semibold">Відео</th>
-              <th class="px-4 py-3 text-right font-semibold">Дії</th>
+              <th class="px-4 py-3 text-left font-semibold">{% trans "Тип" %}</th>
+              <th class="px-4 py-3 text-left font-semibold">{% trans "Місце" %}</th>
+              <th class="px-4 py-3 text-left font-semibold">{% trans "Дата" %}</th>
+              <th class="px-4 py-3 text-left font-semibold">{% trans "Відео" %}</th>
+              <th class="px-4 py-3 text-right font-semibold">{% trans "Дії" %}</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-gray-200 dark:divide-white/10">
@@ -164,7 +165,7 @@
                   </span>
                 </td>
                 <td class="px-4 py-3 text-right">
-                  <a href="{% url 'category_detail' cat.id %}" class="btn btn-secondary btn-sm">Відкрити</a>
+                  <a href="{% url 'category_detail' cat.id %}" class="btn btn-secondary btn-sm">{% trans "Відкрити" %}</a>
                 </td>
               </tr>
             {% endfor %}
@@ -177,23 +178,23 @@
         <nav class="card-body pt-4 flex items-center justify-center gap-2">
           {% with qs='attempt_type='|add:filter_attempt_type|urlencode|add:'&sort='|add:sort|urlencode %}
             {% if categories.has_previous %}
-              <a class="btn btn-sm" href="?page=1&{{ qs }}">« Перша</a>
-              <a class="btn btn-sm" href="?page={{ categories.previous_page_number }}&{{ qs }}">‹ Назад</a>
+              <a class="btn btn-sm" href="?page=1&{{ qs }}">« {% trans "Перша" %}</a>
+              <a class="btn btn-sm" href="?page={{ categories.previous_page_number }}&{{ qs }}">‹ {% trans "Назад" %}</a>
             {% else %}
-              <span class="btn btn-sm opacity-50 pointer-events-none">« Перша</span>
-              <span class="btn btn-sm opacity-50 pointer-events-none">‹ Назад</span>
+              <span class="btn btn-sm opacity-50 pointer-events-none">« {% trans "Перша" %}</span>
+              <span class="btn btn-sm opacity-50 pointer-events-none">‹ {% trans "Назад" %}</span>
             {% endif %}
 
             <span class="px-3 py-1.5 rounded border border-gray-200 dark:border-white/10 bg-white/70 dark:bg-white/10">
-              Стор. <strong>{{ categories.number }}</strong> з {{ categories.paginator.num_pages }}
+              {% blocktrans with page=categories.number pages=categories.paginator.num_pages %}Стор. {{ page }} з {{ pages }}{% endblocktrans %}
             </span>
 
             {% if categories.has_next %}
-              <a class="btn btn-sm" href="?page={{ categories.next_page_number }}&{{ qs }}">Вперед ›</a>
-              <a class="btn btn-sm" href="?page={{ categories.paginator.num_pages }}&{{ qs }}">Остання »</a>
+              <a class="btn btn-sm" href="?page={{ categories.next_page_number }}&{{ qs }}">{% trans "Вперед" %} ›</a>
+              <a class="btn btn-sm" href="?page={{ categories.paginator.num_pages }}&{{ qs }}">{% trans "Остання" %} »</a>
             {% else %}
-              <span class="btn btn-sm opacity-50 pointer-events-none">Вперед ›</span>
-              <span class="btn btn-sm opacity-50 pointer-events-none">Остання »</span>
+              <span class="btn btn-sm opacity-50 pointer-events-none">{% trans "Вперед" %} ›</span>
+              <span class="btn btn-sm opacity-50 pointer-events-none">{% trans "Остання" %} »</span>
             {% endif %}
           {% endwith %}
         </nav>
@@ -202,7 +203,7 @@
   {% else %}
     <article class="card">
       <div class="card-body">
-        <p class="text-gray-600 dark:text-gray-300 italic">Немає доступних категорій або відео.</p>
+        <p class="text-gray-600 dark:text-gray-300 italic">{% trans "Немає доступних категорій або відео." %}</p>
       </div>
     </article>
   {% endif %}

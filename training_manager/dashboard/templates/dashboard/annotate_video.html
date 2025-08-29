@@ -1,6 +1,6 @@
 {% extends "dashboard/base.html" %}
-{% load static %}
-{% block title %}Анотації — {{ video }}{% endblock %}
+{% load static i18n %}
+{% block title %}{% blocktrans with v=video %}Анотації — {{ v }}{% endblocktrans %}{% endblock %}
 
 {% block content %}
 <style>
@@ -162,24 +162,24 @@
 <!-- Sticky header -->
 <div class="sticky top-0 z-50 pt-3 pb-2 mb-2 bg-gray-50/80 dark:bg-gray-900/80 backdrop-blur">
   <div class="mx-auto max-w-6xl flex items-center justify-between gap-3">
-    <h1 class="text-2xl font-semibold">Анотації:</h1>
+    <h1 class="text-2xl font-semibold">{% trans "Анотації:" %}</h1>
     <div class="flex items-center gap-2">
       <!-- Кнопка зберегти (активується після змін; type="button" обов’язково) -->
       <button id="saveBtn" type="button"
               class="px-4 py-2 rounded-xl text-white transition disabled:opacity-70"
-              disabled>Зберегти</button>
+              disabled>{% trans "Зберегти" %}</button>
 
-      <span id="saveBadge" class="text-sm text-green-600 hidden">Збережено ✓</span>
+      <span id="saveBadge" class="text-sm text-green-600 hidden">{% trans "Збережено ✓" %}</span>
 
       {% if back_url %}
         <a href="{{ back_url }}"
            class="px-4 py-2 rounded-xl bg-gray-200 dark:bg-gray-800 hover:bg-gray-300 dark:hover:bg-gray-700 transition">
-           Назад
+           {% trans "Назад" %}
         </a>
       {% else %}
         <a href="{% url 'library' %}"
            class="px-4 py-2 rounded-xl bg-gray-200 dark:bg-gray-800 hover:bg-gray-300 dark:hover:bg-gray-700 transition">
-           Назад
+           {% trans "Назад" %}
         </a>
       {% endif %}
     </div>
@@ -192,76 +192,76 @@
 
     <!-- LEFT: Actions + Tools -->
     <div class="panel">
-      <div class="section-title">Дії</div>
+      <div class="section-title">{% trans "Дії" %}</div>
       <div class="actions-grid">
-        <button id="undoBtn" class="chip chip-toggle" title="Скасувати (Ctrl+Z)">
-          <svg class="ico" viewBox="0 0 24 24"><path d="M9 14l-4-4 4-4"/><path d="M20 20a8 8 0 0 0-8-8H5"/></svg> Скасувати
+        <button id="undoBtn" class="chip chip-toggle" title="{% trans 'Скасувати (Ctrl+Z)' %}">
+          <svg class="ico" viewBox="0 0 24 24"><path d="M9 14l-4-4 4-4"/><path d="M20 20a8 8 0 0 0-8-8H5"/></svg> {% trans "Скасувати" %}
         </button>
-        <button id="redoBtn" class="chip chip-toggle" title="Відновити (Ctrl+Y)">
-          <svg class="ico" viewBox="0 0 24 24"><path d="M15 10l4 4-4 4"/><path d="M4 20a8 8 0 0 1 8-8h6"/></svg> Відновити
+        <button id="redoBtn" class="chip chip-toggle" title="{% trans 'Відновити (Ctrl+Y)' %}">
+          <svg class="ico" viewBox="0 0 24 24"><path d="M15 10l4 4-4 4"/><path d="M4 20a8 8 0 0 1 8-8h6"/></svg> {% trans "Відновити" %}
         </button>
-        <button id="clearBtn" class="chip chip-toggle" title="Очистити все">
-          <svg class="ico" viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6l1-2h4l1 2"/></svg> Очистити
+        <button id="clearBtn" class="chip chip-toggle" title="{% trans 'Очистити все' %}">
+          <svg class="ico" viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6l1-2h4l1 2"/></svg> {% trans "Очистити" %}
         </button>
 
         <!-- Mode switch spans two cells -->
-        <label class="switch mode-cell" title="Перемкнути режим">
-          <span>Редагування</span>
+        <label class="switch mode-cell" title="{% trans 'Перемкнути режим' %}">
+          <span>{% trans "Редагування" %}</span>
           <input id="modeSwitch" type="checkbox" />
-          <span>Перегляд</span>
+          <span>{% trans "Перегляд" %}</span>
         </label>
 
-        <button id="angleLabelBtn" class="chip chip-toggle" aria-pressed="true" title="Показувати градуси">
-          <svg class="ico" viewBox="0 0 24 24"><path d="M3 20V4M3 20H20M3 20L18 8"/><circle cx="18" cy="8" r="1.6"/></svg> Градуси
+        <button id="angleLabelBtn" class="chip chip-toggle" aria-pressed="true" title="{% trans 'Показувати градуси' %}">
+          <svg class="ico" viewBox="0 0 24 24"><path d="M3 20V4M3 20H20M3 20L18 8"/><circle cx="18" cy="8" r="1.6"/></svg> {% trans "Градуси" %}
         </button>
       </div>
 
-      <div class="section-title">Інструменти</div>
+      <div class="section-title">{% trans "Інструменти" %}</div>
       <div class="tools-grid">
-        <button class="tool-btn chip chip-toggle" data-tool="line"   aria-pressed="true"  title="Лінія (L)">
-          <svg class="ico" viewBox="0 0 24 24"><path d="M4 20 20 4"/></svg> Лінія
+        <button class="tool-btn chip chip-toggle" data-tool="line"   aria-pressed="true"  title="{% trans 'Лінія (L)' %}">
+          <svg class="ico" viewBox="0 0 24 24"><path d="M4 20 20 4"/></svg> {% trans "Лінія" %}
         </button>
-        <button class="tool-btn chip chip-toggle" data-tool="angle"  aria-pressed="false" title="Кут (K)">
-          <svg class="ico" viewBox="0 0 24 24"><path d="M4 20V4M4 20L20 20M4 20L18 8"/></svg> Кут
+        <button class="tool-btn chip chip-toggle" data-tool="angle"  aria-pressed="false" title="{% trans 'Кут (K)' %}">
+          <svg class="ico" viewBox="0 0 24 24"><path d="M4 20V4M4 20L20 20M4 20L18 8"/></svg> {% trans "Кут" %}
         </button>
-        <button class="tool-btn chip chip-toggle" data-tool="freehand" aria-pressed="false" title="Олівець (P)">
-          <svg class="ico" viewBox="0 0 24 24"><path d="M3 21l3-1 11-11-2-2L4 18l-1 3zM15 5l2 2"/></svg> Олівець
+        <button class="tool-btn chip chip-toggle" data-tool="freehand" aria-pressed="false" title="{% trans 'Олівець (P)' %}">
+          <svg class="ico" viewBox="0 0 24 24"><path d="M3 21l3-1 11-11-2-2L4 18l-1 3zM15 5l2 2"/></svg> {% trans "Олівець" %}
         </button>
-        <button class="tool-btn chip chip-toggle" data-tool="arrow" aria-pressed="false" title="Стрілка (A)">
-          <svg class="ico" viewBox="0 0 24 24"><path d="M4 12h12"/><path d="M13 7l5 5-5 5"/></svg> Стрілка
+        <button class="tool-btn chip chip-toggle" data-tool="arrow" aria-pressed="false" title="{% trans 'Стрілка (A)' %}">
+          <svg class="ico" viewBox="0 0 24 24"><path d="M4 12h12"/><path d="M13 7l5 5-5 5"/></svg> {% trans "Стрілка" %}
         </button>
-        <button class="tool-btn chip chip-toggle" data-tool="rect" aria-pressed="false" title="Прямокутник (R)">
-          <svg class="ico" viewBox="0 0 24 24"><rect x="4" y="6" width="16" height="12" rx="2"/></svg> Прямокутник
+        <button class="tool-btn chip chip-toggle" data-tool="rect" aria-pressed="false" title="{% trans 'Прямокутник (R)' %}">
+          <svg class="ico" viewBox="0 0 24 24"><rect x="4" y="6" width="16" height="12" rx="2"/></svg> {% trans "Прямокутник" %}
         </button>
-        <button class="tool-btn chip chip-toggle" data-tool="circle" aria-pressed="false" title="Коло (C)">
-          <svg class="ico" viewBox="0 0 24 24"><circle cx="12" cy="12" r="6"/></svg> Коло
+        <button class="tool-btn chip chip-toggle" data-tool="circle" aria-pressed="false" title="{% trans 'Коло (C)' %}">
+          <svg class="ico" viewBox="0 0 24 24"><circle cx="12" cy="12" r="6"/></svg> {% trans "Коло" %}
         </button>
       </div>
     </div>
 
     <!-- MIDDLE: Thickness + Zoom + Speed -->
     <div class="panel">
-      <div class="section-title">Товщина</div>
+      <div class="section-title">{% trans "Товщина" %}</div>
       <input id="widthRange" type="range" min="1" max="12" value="2" class="range-fat accent-blue-600">
-      <div class="text-xs text-gray-500 dark:text-gray-400">Товщина: <span id="widthVal">2</span></div>
+      <div class="text-xs text-gray-500 dark:text-gray-400">{% trans "Товщина:" %} <span id="widthVal">2</span></div>
 
-      <div class="section-title" style="margin-top:.15rem">Збільшення <span id="zoomPct" class="text-gray-500 dark:text-gray-400 text-xs">100%</span></div>
+      <div class="section-title" style="margin-top:.15rem">{% trans "Збільшення" %} <span id="zoomPct" class="text-gray-500 dark:text-gray-400 text-xs">100%</span></div>
       <input id="zoomRange" type="range" min="100" max="300" step="5" value="100" class="range-fat accent-blue-600">
 
-      <div class="section-title" style="margin-top:.15rem">Швидкість <span id="speedVal" class="text-gray-500 dark:text-gray-400 text-xs">1×</span></div>
+      <div class="section-title" style="margin-top:.15rem">{% trans "Швидкість" %} <span id="speedVal" class="text-gray-500 dark:text-gray-400 text-xs">1×</span></div>
       <input id="speedRange" type="range" min="0.25" max="2" step="0.05" value="1" class="range-fat accent-blue-600">
     </div>
 
     <!-- RIGHT: Palette (narrow, filled) -->
     <div class="panel">
       <div class="flex items-center justify-between">
-        <div class="section-title">Колір</div>
+        <div class="section-title">{% trans "Колір" %}</div>
         <div class="flex items-center gap-2">
-          <div id="colorPreview" class="swatch" title="Поточний"></div>
-          <input id="colorPicker" type="color" value="#10b981" class="h-8 w-10 p-0 border rounded cursor-pointer" title="Піпетка">
+          <div id="colorPreview" class="swatch" title="{% trans 'Поточний' %}"></div>
+          <input id="colorPicker" type="color" value="#10b981" class="h-8 w-10 p-0 border rounded cursor-pointer" title="{% trans 'Піпетка' %}">
         </div>
       </div>
-      <div id="palette" class="palette" role="radiogroup" aria-label="Палітра">
+      <div id="palette" class="palette" role="radiogroup" aria-label="{% trans 'Палітра' %}">
         <!-- 30 кольорів (6×5) — заповнюють блок без «дір» -->
         <!-- Row 1 -->
         <button class="color-btn" role="radio" data-color="#ef4444" aria-checked="false" style="background:#ef4444"></button>
@@ -308,19 +308,23 @@
     <div id="stage" class="draw-mode">
       <video id="player" controls>
         <source src="{{ video.video.url }}" type="video/mp4">
-        Твій браузер не підтримує відео.
+        {% trans "Твій браузер не підтримує відео." %}
       </video>
       <canvas id="annoCanvas"></canvas>
     </div>
   </div>
 
   <div class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-    <p id="hint">Режим: Лінія — клікни початок і кінець. Для керування відео — увімкни «Перегляд». Зум: слайдер або Ctrl/Alt + колесо.</p>
+    <p id="hint">{% trans "Режим: Лінія — клікни початок і кінець. Для керування відео — увімкни «Перегляд». Зум: слайдер або Ctrl/Alt + колесо." %}</p>
   </div>
 </div>
 
 <script>
 (function(){
+  // JS i18n aliases (вимагає підключеного jsi18n у base.html)
+  const _ = typeof gettext === 'function' ? gettext : (s)=>s;
+  const n_ = typeof ngettext === 'function' ? ngettext : (s, p, n)=> (n===1?s:p);
+
   const player = document.getElementById('player');
   const zoomHost = document.getElementById('zoomHost');
   const stage  = document.getElementById('stage');
@@ -350,6 +354,19 @@
   const saveBadge  = document.getElementById('saveBadge');
 
   const apiUrl = "{% url 'annotations_api' video.id %}";
+
+  // Тексти для підказок/діалогів
+  const T = {
+    mode_view: _("Режим: Перегляд — кліки керують відео. Зум: Ctrl/Alt + колесо."),
+    mode_line: _("Режим: Лінія — клікни початок і кінець."),
+    mode_angle:_("Режим: Кут — три кліки: точка → вершина → точка."),
+    mode_penc: _("Режим: Олівець — затисни й малюй."),
+    mode_arr:  _("Режим: Стрілка — клікни початок і кінець."),
+    mode_rect: _("Режим: Прямокутник — перетягни з кутка."),
+    mode_circ: _("Режим: Коло — потягни для радіуса."),
+    clear_all: _("Очистити всі анотації?"),
+    save_err:  _("Помилка збереження"),
+  };
 
   /* State */
   let tool   = 'line';
@@ -415,13 +432,13 @@
     if (isView){ stage.classList.remove('draw-mode'); canvas.style.pointerEvents='none';  player.controls=true; }
     else       { stage.classList.add   ('draw-mode'); canvas.style.pointerEvents='auto'; player.controls=false;}
     document.getElementById('hint').textContent =
-      isView ? 'Режим: Перегляд — кліки керують відео. Зум: Ctrl/Alt + колесо.' :
-               (tool==='angle' ? 'Режим: Кут — три кліки: точка → вершина → точка.' :
-                tool==='freehand' ? 'Режим: Олівець — затисни й малюй.' :
-                tool==='arrow' ? 'Режим: Стрілка — клікни початок і кінець.' :
-                tool==='rect' ? 'Режим: Прямокутник — перетягни з кутка.' :
-                tool==='circle' ? 'Режим: Коло — потягни для радіуса.' :
-                'Режим: Лінія — клікни початок і кінець.');
+      isView ? T.mode_view :
+               (tool==='angle' ? T.mode_angle :
+                tool==='freehand' ? T.mode_penc :
+                tool==='arrow' ? T.mode_arr :
+                tool==='rect' ? T.mode_rect :
+                tool==='circle' ? T.mode_circ :
+                T.mode_line);
   }
 
   /* Angle labels */
@@ -622,7 +639,7 @@
   });
   clearBtn.addEventListener('click', ()=>{
     if (!shapes.length) return;
-    if (!confirm('Очистити всі анотації?')) return;
+    if (!confirm(T.clear_all)) return;
     recordHistory();
     shapes=[]; tempPts=[]; hoverPt=null;
     redraw(); markDirty();
@@ -664,7 +681,7 @@
       saveBadge.classList.remove('hidden');
       setTimeout(() => saveBadge.classList.add('hidden'), 1200);
     } catch(err){
-      alert('Помилка збереження: ' + err.message);
+      alert(T.save_err + ': ' + err.message);
       saveBtn.disabled = false;
     }
   }

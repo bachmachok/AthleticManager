@@ -1,5 +1,6 @@
 # training_manager/dashboard/urls.py
 from django.urls import path
+from django.views.i18n import set_language, JavaScriptCatalog  # + JS i18n
 from . import views
 
 urlpatterns = [
@@ -7,13 +8,16 @@ urlpatterns = [
     path("", views.index, name="index"),
     path("login/", views.login_request_code, name="login"),
     path("verify-otp/", views.verify_code, name="verify_code"),
-    path("set-language/", views.settings_view, name="set_language"),
+
+    # --- I18N / тема ---
+    path("i18n/set-language/", set_language, name="set_language"),
+    path("i18n/set-theme/", views.set_theme, name="set_theme"),
+    path("i18n/js/", JavaScriptCatalog.as_view(packages=("dashboard",)), name="jsi18n"),
 
     # --- Приватні ---
     path("home/", views.dashboard_home, name="home"),
     path("upload/", views.upload, name="upload"),
     path("library/", views.library_view, name="library"),
-    path("settings/", views.settings_view, name="settings"),
     path("logout/", views.logout_view, name="logout"),
 
     # --- Категорії ---

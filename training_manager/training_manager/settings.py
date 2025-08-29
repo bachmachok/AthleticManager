@@ -1,3 +1,4 @@
+# training_manager/settings.py
 from pathlib import Path
 from datetime import timedelta
 import os
@@ -15,9 +16,14 @@ if ENV_PATH.exists():
         os.environ.setdefault(k, v)
 
 # --- Базові налаштування ---
-SECRET_KEY = os.getenv("SECRET_KEY", "django-insecure-d*8-bovnb5a-bjew0jgf-b3(2gehllw_62&zz)*6(^=is0!gyp")
+SECRET_KEY = os.getenv(
+    "SECRET_KEY",
+    "django-insecure-d*8-bovnb5a-bjew0jgf-b3(2gehllw_62&zz)*6(^=is0!gyp",
+)
 DEBUG = os.getenv("DEBUG", "True") == "True"
-ALLOWED_HOSTS = [h for h in os.getenv("ALLOWED_HOSTS", "").split(",") if h] if not DEBUG else ["*"]
+ALLOWED_HOSTS = (
+    [h for h in os.getenv("ALLOWED_HOSTS", "").split(",") if h] if not DEBUG else ["*"]
+)
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -26,15 +32,17 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+
     "dashboard",
 
-    # --- JWT: блэкліст refresh токенів (міграція обов’язкова) ---
+    # --- JWT: блэкліст refresh токенів (потребує міграцій) ---
     "rest_framework_simplejwt.token_blacklist",
 ]
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
+    # ВАЖЛИВО: LocaleMiddleware ПІСЛЯ Session і ПЕРЕД Common
     "django.middleware.locale.LocaleMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -48,7 +56,7 @@ ROOT_URLCONF = "training_manager.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [os.path.join(BASE_DIR, "templates")],
+        "DIRS": [BASE_DIR / "templates"],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -56,6 +64,7 @@ TEMPLATES = [
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
                 "django.template.context_processors.i18n",
+                "django.template.context_processors.static",
             ],
         },
     },
@@ -90,22 +99,33 @@ LANGUAGES = [
     ("uk", "Українська"),
 ]
 
+# Шляхи, де лежать переклади (.po/.mo)
 LOCALE_PATHS = [
-    os.path.join(BASE_DIR, "locale"),
+    BASE_DIR / "locale",
+    BASE_DIR / "training_manager" / "locale",  # гарантовано підхоплюємо ваші en/uk
 ]
+
+# Cookie для мови (явно)
+LANGUAGE_COOKIE_NAME = "django_language"
+LANGUAGE_COOKIE_AGE = 60 * 60 * 24 * 365  # 1 рік
+LANGUAGE_COOKIE_SAMESITE = os.getenv("LANGUAGE_COOKIE_SAMESITE", "Lax")
+LANGUAGE_COOKIE_SECURE = not DEBUG
+LANGUAGE_COOKIE_HTTPONLY = False  # дозволяє JS/шаблонам читати для UI-перемикачів
+LANGUAGE_COOKIE_PATH = "/"
 
 # --- Статика/медіа ---
 STATIC_URL = "/static/"
-STATICFILES_DIRS = [os.path.join(BASE_DIR, "dashboard", "static")]
-STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
+STATICFILES_DIRS = [BASE_DIR / "dashboard" / "static"]
+STATIC_ROOT = BASE_DIR / "staticfiles"
 
 MEDIA_URL = "/media/"
-MEDIA_ROOT = os.path.join(BASE_DIR, "media")
+MEDIA_ROOT = BASE_DIR / "media"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # --- Логін/редіректи ---
 LOGIN_URL = "/login/"
+# Переконайся, що у urls є name="home" або зміни на потрібний
 LOGIN_REDIRECT_URL = "home"
 
 # --- Пошта ---
@@ -119,7 +139,7 @@ EMAIL_USE_SSL = os.getenv("EMAIL_USE_SSL", "False") == "True"
 DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL", EMAIL_HOST_USER or "webmaster@localhost")
 SERVER_EMAIL = DEFAULT_FROM_EMAIL
 
-# --- Кеш (для RSS) ---
+# --- Кеш (для RSS та ін.) ---
 CACHES = {
     "default": {
         "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
@@ -136,13 +156,20 @@ SPORT_NEWS_FEEDS = [
     "http://feeds.bbci.co.uk/sport/athletics/rss.xml",
 ]
 
+# За бажанням — різні фіди для різних мов (views.index це підтримує)
+SPORT_NEWS_FEEDS_MAP = {
+    # "uk": [...],
+    # "en": [...],
+}
+
 # --- Безпека / проксі ---
 CSRF_TRUSTED_ORIGINS = [o for o in os.getenv("CSRF_TRUSTED_ORIGINS", "").split(",") if o.strip()]
-SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https") if os.getenv("ENABLE_PROXY_SSL", "False") == "True" else None
+SECURE_PROXY_SSL_HEADER = (
+    ("HTTP_X_FORWARDED_PROTO", "https") if os.getenv("ENABLE_PROXY_SSL", "False") == "True" else None
+)
 
 # --- JWT (SimpleJWT) ---
 SIMPLE_JWT = {
-    # Можеш керувати через .env: JWT_ACCESS_MINUTES, JWT_REFRESH_DAYS
     "ACCESS_TOKEN_LIFETIME": timedelta(minutes=int(os.getenv("JWT_ACCESS_MINUTES", "30"))),
     "REFRESH_TOKEN_LIFETIME": timedelta(days=int(os.getenv("JWT_REFRESH_DAYS", "7"))),
     "ROTATE_REFRESH_TOKENS": True,
@@ -150,19 +177,13 @@ SIMPLE_JWT = {
     # SIGNING_KEY за замовчуванням SECRET_KEY; ALGORITHM = 'HS256'
 }
 
-# --- Cookie-політики (щоб JWT у HttpOnly-куках були коректні) ---
-# У продакшені (DEBUG=False) ввімкнути secure
+# --- Cookie-політики ---
 SESSION_COOKIE_SECURE = not DEBUG
 CSRF_COOKIE_SECURE = not DEBUG
-
-# Для редіректів із ?next= і форм підходить Lax; можеш змінити на 'Strict' за потреби
 SESSION_COOKIE_SAMESITE = os.getenv("SESSION_COOKIE_SAMESITE", "Lax")
 CSRF_COOKIE_SAMESITE = os.getenv("CSRF_COOKIE_SAMESITE", "Lax")
 
-# CSRF cookie має бути доступна JS (щоб твій fetch брав csrftoken); за замовчуванням False — залишаємо
-# CSRF_COOKIE_HTTPONLY = False
-
-# Додатково для продакшена (опційно через .env, не ламає дев):
+# --- Додаткова продакшн-безпека (керується .env) ---
 SECURE_SSL_REDIRECT = os.getenv("SECURE_SSL_REDIRECT", "False") == "True"
 SECURE_HSTS_SECONDS = int(os.getenv("SECURE_HSTS_SECONDS", "0"))
 SECURE_HSTS_INCLUDE_SUBDOMAINS = os.getenv("SECURE_HSTS_INCLUDE_SUBDOMAINS", "False") == "True"
@@ -172,11 +193,6 @@ SECURE_HSTS_PRELOAD = os.getenv("SECURE_HSTS_PRELOAD", "False") == "True"
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
-    "handlers": {
-        "console": {"class": "logging.StreamHandler"},
-    },
-    "root": {
-        "handlers": ["console"],
-        "level": "INFO" if DEBUG else "WARNING",
-    },
+    "handlers": {"console": {"class": "logging.StreamHandler"}},
+    "root": {"handlers": ["console"], "level": "INFO" if DEBUG else "WARNING"},
 }

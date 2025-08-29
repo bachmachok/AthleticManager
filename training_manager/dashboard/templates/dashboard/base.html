@@ -1,11 +1,62 @@
-{% load static %}
+{% load static i18n %}
 <!DOCTYPE html>
-<html lang="uk" class="h-full {% if request.session.theme == 'dark' %}dark{% endif %}">
+<html lang="{{ LANGUAGE_CODE }}" class="h-full {% if request.session.theme == 'dark' %}dark{% endif %}">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>{% block title %}Athletic Manager{% endblock %}</title>
+
+  <!-- Миттєва тема з localStorage (без «мигання») -->
+  <script>
+    try {
+      const t = localStorage.getItem('theme');
+      if (t === 'dark') document.documentElement.classList.add('dark');
+      if (t === 'light') document.documentElement.classList.remove('dark');
+    } catch (e) {}
+  </script>
+
   <link rel="stylesheet" href="{% static 'dashboard/app.css' %}">
+
+  <!-- Стили для нижніх перемикачів -->
+  <style>
+    .sb-settings{padding:10px 12px 12px}
+    .sb-settings__title{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,.7);margin-bottom:8px}
+
+    /* блок, що прилипає до самого низу сайдбару */
+    .sb-bottom{
+      position: sticky;
+      bottom: 0;
+      margin-top: auto;
+      padding: 8px 8px 10px;
+      backdrop-filter: blur(6px);
+      background: linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(10,22,66,.15) 35%, rgba(10,22,66,.28) 100%);
+      border-top: 1px solid rgba(255,255,255,.12);
+    }
+    .dark .sb-bottom{
+      background: linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,.22) 36%, rgba(0,0,0,.38) 100%);
+    }
+
+    /* універсальна «пігулка» з повзунком */
+    .segbar{--n:2;--i:0;position:relative;display:grid;grid-template-columns:repeat(var(--n),1fr);
+      gap:4px;background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.22);
+      border-radius:999px;padding:4px;isolation:isolate}
+    .segbar__knob{position:absolute;inset:4px auto 4px 4px;width:calc((100% - 8px)/var(--n));
+      transform:translateX(calc(var(--i)*100%));transition:transform .2s ease,background .2s ease,box-shadow .2s ease;
+      background:#fff;border-radius:999px;box-shadow:0 8px 18px rgba(0,0,0,.25);z-index:0}
+    .segbar button{position:relative;z-index:1;display:inline-flex;align-items:center;justify-content:center;
+      gap:.45rem;height:32px;border:0;background:transparent;color:#fff;padding:0 10px;border-radius:999px;
+      font-size:12px;font-weight:600;cursor:pointer;user-select:none}
+    .segbar button[aria-pressed="true"]{color:#0b1e4b}
+    .segbar--slim{padding:3px}
+    .segbar--slim .segbar__knob{inset:3px auto 3px 3px}
+    .segbar--lang button{height:30px}
+
+    /* fallback select для >3 мов */
+    .sb-select{appearance:none;width:100%;border-radius:10px;border:1px solid rgba(255,255,255,.2);
+      background:rgba(255,255,255,.08);color:#fff;padding:.45rem .7rem;font-size:12px}
+    .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+  </style>
+
   {% block extra_head %}{% endblock %}
 </head>
 <body id="app" class="h-full bg-gray-50 text-gray-900 antialiased dark:bg-gray-900 dark:text-gray-100">
@@ -26,7 +77,7 @@
     <!-- Верхній бар -->
     <div class="sb-top">
       <div class="flex items-center gap-3">
-        <button id="logoToggle" class="logo-toggle" aria-label="Розгорнути/згорнути">
+        <button id="logoToggle" class="logo-toggle" aria-label="{% trans 'Розгорнути/згорнути' %}">
           <span class="ico-logo">🏃</span>
           <span class="ico-menu">☰</span>
         </button>
@@ -35,7 +86,7 @@
       <button
         id="menuToggle"
         class="safe-tap rounded-lg bg-white/10 px-3 py-2 hover:bg-white/20 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40"
-        aria-label="Згорнути меню"
+        aria-label="{% trans 'Згорнути меню' %}"
         aria-expanded="true">☰</button>
     </div>
 
@@ -46,18 +97,18 @@
         <div class="min-w-0">
           {% if user.is_authenticated %}
             <div class="font-medium truncate">{{ user.username }}</div>
-            <div class="text-white/70 text-sm">Вітаю!</div>
+            <div class="text-white/70 text-sm">{% trans "Вітаю!" %}</div>
           {% else %}
-            <div class="font-medium">Гість</div>
-            <div class="text-white/70 text-sm">Увійдіть, щоб зберігати прогрес</div>
+            <div class="font-medium">{% trans "Гість" %}</div>
+            <div class="text-white/70 text-sm">{% trans "Увійдіть, щоб зберігати прогрес" %}</div>
           {% endif %}
         </div>
       </div>
       <div class="mt-3">
         {% if user.is_authenticated %}
-          <a href="{% url 'logout' %}" class="btn-ghost w-full justify-center bg-white/10 hover:bg-white/20">Вихід</a>
+          <a href="{% url 'logout' %}" class="btn-ghost w-full justify-center bg-white/10 hover:bg-white/20">{% trans "Вихід" %}</a>
         {% else %}
-          <a href="{% url 'login' %}" class="btn-primary w-full justify-center">Вхід</a>
+          <a href="{% url 'login' %}" class="btn-primary w-full justify-center">{% trans "Вхід" %}</a>
         {% endif %}
       </div>
     </div>
@@ -67,47 +118,80 @@
     <nav class="flex flex-col gap-1 px-2 py-2 text-sm">
       <a href="{% url 'index' %}" class="nav-link {% if current == 'index' %}nav-link-active{% endif %}">
         <span class="nav-icon">🏠</span>
-        <span class="nav-text">Головна</span>
-        <span class="nav-under hidden">Головна</span>
+        <span class="nav-text">{% trans "Головна" %}</span>
+        <span class="nav-under hidden">{% trans "Головна" %}</span>
       </a>
       <a href="{% url 'library' %}" class="nav-link {% if current == 'library' %}nav-link-active{% endif %}">
         <span class="nav-icon">📚</span>
-        <span class="nav-text">Бібліотека</span>
-        <span class="nav-under hidden">Бібліотека</span>
+        <span class="nav-text">{% trans "Бібліотека" %}</span>
+        <span class="nav-under hidden">{% trans "Бібліотека" %}</span>
       </a>
       <a href="{% url 'upload' %}" class="nav-link {% if current == 'upload' %}nav-link-active{% endif %}">
         <span class="nav-icon">⤴️</span>
-        <span class="nav-text">Завантаження</span>
-        <span class="nav-under hidden">Завантаження</span>
+        <span class="nav-text">{% trans "Завантаження" %}</span>
+        <span class="nav-under hidden">{% trans "Завантаження" %}</span>
       </a>
-
       <a href="{% url 'annotations_list' %}" class="nav-link {% if current in 'annotations_list,annotate_video' %}nav-link-active{% endif %}">
         <span class="nav-icon">🖊️</span>
-        <span class="nav-text">Анотації</span>
-        <span class="nav-under hidden">Анотації</span>
-      </a>
-      <a href="{% url 'settings' %}" class="nav-link {% if current == 'settings' %}nav-link-active{% endif %}">
-        <span class="nav-icon">⚙️</span>
-        <span class="nav-text">Налаштування</span>
-        <span class="nav-under hidden">Налаштування</span>
+        <span class="nav-text">{% trans "Анотації" %}</span>
+        <span class="nav-under hidden">{% trans "Анотації" %}</span>
       </a>
     </nav>
     {% endwith %}
+
+    <!-- ===== НИЗ САЙДБАРУ: МОВА + ТЕМА (sticky) ===== -->
+    <div class="sb-bottom">
+      <div class="sb-settings">
+        <div class="sb-settings__title">{% trans "Налаштування" %}</div>
+
+        <!-- Тема -->
+        <div class="mb-2">
+          <div id="themeSeg" class="segbar segbar--slim" data-role="theme">
+            <div class="segbar__knob" aria-hidden="true"></div>
+            <button type="button" data-value="light" class="theme-btn">🌞 <span>{% trans "Світла" %}</span></button>
+            <button type="button" data-value="dark"  class="theme-btn">🌙 <span>{% trans "Темна" %}</span></button>
+          </div>
+        </div>
+
+        <!-- Мова: сегмент (<=3 мов) або fallback select -->
+        {% get_available_languages as LANGS %}
+        {% if LANGS|length <= 3 %}
+          <div id="langSeg" class="segbar segbar--lang" data-role="lang">
+            <div class="segbar__knob" aria-hidden="true"></div>
+            {% for code, name in LANGS %}
+              <button type="button" class="lang-btn" data-code="{{ code }}">🌐 {{ name }}</button>
+            {% endfor %}
+          </div>
+        {% else %}
+          <form action="{% url 'set_language' %}" method="post" class="mt-2">
+            {% csrf_token %}
+            <input type="hidden" name="next" value="{{ request.get_full_path }}">
+            <label class="sr-only" for="sidebar-language">{% trans "Оберіть мову" %}</label>
+            <select id="sidebar-language" name="language" class="sb-select" onchange="this.form.submit()">
+              {% get_current_language as LANGUAGE_CODE %}
+              {% for code, name in LANGS %}
+                <option value="{{ code }}" {% if code == LANGUAGE_CODE %}selected{% endif %}>{{ name }}</option>
+              {% endfor %}
+            </select>
+          </form>
+        {% endif %}
+      </div>
+    </div>
   </aside>
 
   <!-- CONTENT -->
   <main id="main" class="pt-4 md:pt-6 flex flex-col min-h-screen">
     <div class="hidden md:flex justify-end pr-4 text-xs text-gray-500 dark:text-gray-400">
-      {% if request.resolver_match.url_name %}/ {{ request.resolver_match.url_name }}{% endif %}
+      {% with name=request.resolver_match.url_name %}
+        {% if name and name != 'set_language' and name != 'set_theme' %}/ {{ name }}{% endif %}
+      {% endwith %}
     </div>
 
     <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6 flex-grow">
       {% block content %}{% endblock %}
     </div>
 
-    <!-- «Штовхач» 1px, щоб футер завжди починався після 100% висоти екрана -->
     <div class="h-px shrink-0"></div>
-
     {% include 'dashboard/footer.html' %}
   </main>
 </div>
@@ -138,18 +222,81 @@
     menuToggle?.setAttribute('aria-expanded', String(!app.classList.contains('has-collapsed')));
   }
   function toggleMenu() {
-    if (mqDesktop.matches) {
-      toggleDesktopCollapse();     // desktop: колапс/розгортання рейки
-    } else {
-      const hidden = sidebar.classList.contains('-translate-x-full');
-      hidden ? openMobile() : closeMobile();  // mobile: off-canvas
-    }
+    if (mqDesktop.matches) { toggleDesktopCollapse(); }
+    else { const hidden = sidebar.classList.contains('-translate-x-full'); hidden ? openMobile() : closeMobile(); }
   }
-
   menuToggle?.addEventListener('click', toggleMenu);
   logoToggle?.addEventListener('click', toggleMenu);
   overlay?.addEventListener('click', closeMobile);
   window.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeMobile(); });
+
+  /* ===== НИЖНІ ПЕРЕМИКАЧІ ===== */
+  function getCookie(name){
+    const m=document.cookie.match('(^|;)\\s*'+name+'\\s*=\\s*([^;]+)'); return m?m.pop():'';
+  }
+  const csrftoken = getCookie('csrftoken');
+
+  // Тема
+  (function(){
+    const seg = document.getElementById('themeSeg');
+    if (!seg) return;
+    const btns = Array.from(seg.querySelectorAll('.theme-btn'));
+    const stored = localStorage.getItem('theme') || (document.documentElement.classList.contains('dark') ? 'dark' : 'light');
+    setTheme(stored, false);
+
+    function setTheme(val, persist=true){
+      const idx = val === 'dark' ? 1 : 0;
+      seg.style.setProperty('--n', 2);
+      seg.style.setProperty('--i', idx);
+      btns.forEach((b,i)=> b.setAttribute('aria-pressed', String(i===idx)));
+      document.documentElement.classList.toggle('dark', val === 'dark');
+      if (persist){
+        try{ localStorage.setItem('theme', val); }catch(e){}
+        fetch("{% url 'set_theme' %}", {
+          method: 'POST',
+          headers: {
+            'Content-Type':'application/x-www-form-urlencoded',
+            'X-CSRFToken': csrftoken,
+            'X-Requested-With': 'XMLHttpRequest'
+          },
+          body: new URLSearchParams({ theme: val, next: "{{ request.get_full_path|escapejs }}" })
+        }).catch(()=>{});
+      }
+    }
+    btns.forEach(b=> b.addEventListener('click', ()=> setTheme(b.dataset.value)));
+  })();
+
+  // Мова (сегментований перемикач → POST на set_language)
+  (function(){
+    const seg = document.getElementById('langSeg');
+    if (!seg) return;
+    const btns = Array.from(seg.querySelectorAll('.lang-btn'));
+    const curCode = "{{ LANGUAGE_CODE }}";
+    const n = btns.length;
+    seg.style.setProperty('--n', n);
+    const curIdx = Math.max(0, btns.findIndex(b => (b.dataset.code||'').toLowerCase() === curCode.toLowerCase()));
+    seg.style.setProperty('--i', curIdx);
+    btns.forEach((b,i)=> b.setAttribute('aria-pressed', String(i===curIdx)));
+
+    function switchLang(code){
+      const form = document.createElement('form');
+      form.method = 'POST';
+      form.action = "{% url 'set_language' %}";
+      form.innerHTML =
+        '<input type="hidden" name="csrfmiddlewaretoken" value="'+csrftoken+'">'+
+        '<input type="hidden" name="next" value="{{ request.get_full_path|escapejs }}">'+
+        '<input type="hidden" name="language" value="'+code+'">';
+      document.body.appendChild(form);
+      form.submit();
+    }
+    btns.forEach((b,i)=>{
+      b.addEventListener('click', ()=>{
+        seg.style.setProperty('--i', i);
+        btns.forEach((x,j)=> x.setAttribute('aria-pressed', String(i===j)));
+        switchLang(b.dataset.code);
+      });
+    });
+  })();
 </script>
 
 {% block extra_scripts %}{% endblock %}

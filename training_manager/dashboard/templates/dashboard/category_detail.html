@@ -1,8 +1,12 @@
 {# training_manager/dashboard/templates/dashboard/category_detail.html #}
 {% extends "dashboard/base.html" %}
-{% load static %}
+{% load static i18n %}
 
-{% block title %}Категорія — {{ category.get_attempt_type_display }} ({{ category.place }}, {{ category.date }}){% endblock %}
+{% block title %}
+  {% blocktrans with t=category.get_attempt_type_display p=category.place d=category.date|date:"SHORT_DATE_FORMAT" %}
+    Категорія — {{ t }} ({{ p }}, {{ d }})
+  {% endblocktrans %}
+{% endblock %}
 
 {% block content %}
 
@@ -77,9 +81,9 @@
 
   <div class="flex items-center justify-between mb-6">
     <h1 class="text-2xl md:text-3xl font-semibold tracking-tight">
-      🗂️ {{ category.get_attempt_type_display }} — {{ category.place }} — {{ category.date }}
+      🗂️ {% blocktrans with t=category.get_attempt_type_display p=category.place d=category.date|date:"SHORT_DATE_FORMAT" %}{{ t }} — {{ p }} — {{ d }}{% endblocktrans %}
     </h1>
-    <a href="{% url 'library' %}" class="btn">⬅️ До бібліотеки</a>
+    <a href="{% url 'library' %}" class="btn">⬅️ {% trans "До бібліотеки" %}</a>
   </div>
 
   <article class="card mb-6">
@@ -87,26 +91,26 @@
 
       {# Дисципліна як сегментні пігулки #}
       <fieldset>
-        <legend class="mb-2 text-sm font-medium text-gray-700 dark:text-gray-200">Дисципліна</legend>
+        <legend class="mb-2 text-sm font-medium text-gray-700 dark:text-gray-200">{% trans "Дисципліна" %}</legend>
         <div class="seg" id="seg-event">
           {# значення беремо з контексту filter_event #}
           <label class="seg__item {% if not filter_event %}seg__item--active{% endif %}">
-            <span class="seg__icon">✨</span> Усі
+            <span class="seg__icon">✨</span> {% trans "Усі" %}
             <input type="radio" name="event" value="" {% if not filter_event %}checked{% endif %}>
           </label>
 
           <label class="seg__item {% if filter_event == 'run' %}seg__item--active{% endif %}">
-            <span class="seg__icon">🏃</span> Біг
+            <span class="seg__icon">🏃</span> {% trans "Біг" %}
             <input type="radio" name="event" value="run" {% if filter_event == 'run' %}checked{% endif %}>
           </label>
 
           <label class="seg__item {% if filter_event == 'jump' %}seg__item--active{% endif %}">
-            <span class="seg__icon">🦘</span> Стрибки
+            <span class="seg__icon">🦘</span> {% trans "Стрибки" %}
             <input type="radio" name="event" value="jump" {% if filter_event == 'jump' %}checked{% endif %}>
           </label>
 
           <label class="seg__item {% if filter_event == 'throw' %}seg__item--active{% endif %}">
-            <span class="seg__icon">🥏</span> Метання/Штовхання
+            <span class="seg__icon">🥏</span> {% trans "Метання/Штовхання" %}
             <input type="radio" name="event" value="throw" {% if filter_event == 'throw' %}checked{% endif %}>
           </label>
         </div>
@@ -114,59 +118,57 @@
 
       {# Сортування як сегментні пігулки (без "місця") #}
       <fieldset>
-        <legend class="mb-2 text-sm font-medium text-gray-700 dark:text-gray-200">Сортування</legend>
+        <legend class="mb-2 text-sm font-medium text-gray-700 dark:text-gray-200">{% trans "Сортування" %}</legend>
         <div class="seg" id="seg-sort">
           <label class="seg__item {% if sort == 'attempt_asc' %}seg__item--active{% endif %}">
-            <span class="seg__icon">#↑</span> № спроби
+            <span class="seg__icon">#↑</span> {% trans "№ спроби" %}
             <input type="radio" name="sort" value="attempt_asc" {% if sort == 'attempt_asc' %}checked{% endif %}>
           </label>
           <label class="seg__item {% if sort == 'attempt_desc' %}seg__item--active{% endif %}">
-            <span class="seg__icon">#↓</span> № спроби
+            <span class="seg__icon">#↓</span> {% trans "№ спроби" %}
             <input type="radio" name="sort" value="attempt_desc" {% if sort == 'attempt_desc' %}checked{% endif %}>
           </label>
 
           <label class="seg__item {% if sort == 'time_asc' %}seg__item--active{% endif %}">
-            <span class="seg__icon">⏱↑</span> Час
+            <span class="seg__icon">⏱↑</span> {% trans "Час" %}
             <input type="radio" name="sort" value="time_asc" {% if sort == 'time_asc' %}checked{% endif %}>
           </label>
           <label class="seg__item {% if sort == 'time_desc' %}seg__item--active{% endif %}">
-            <span class="seg__icon">⏱↓</span> Час
+            <span class="seg__icon">⏱↓</span> {% trans "Час" %}
             <input type="radio" name="sort" value="time_desc" {% if sort == 'time_desc' %}checked{% endif %}>
           </label>
 
-          {# результат — розумний, але доступний тільки якщо обрана конкретна дисципліна #}
           {% with has_event=filter_event|yesno:"1,," %}
             <label class="seg__item {% if sort == 'result_best' %}seg__item--active{% endif %} {% if not filter_event %}seg__item--disabled{% endif %}">
-              <span class="seg__icon">⭐</span> Результат (кращий)
+              <span class="seg__icon">⭐</span> {% trans "Результат (кращий)" %}
               <input type="radio" name="sort" value="result_best" {% if sort == 'result_best' %}checked{% endif %} {% if not filter_event %}disabled{% endif %}>
             </label>
             <label class="seg__item {% if sort == 'result_worst' %}seg__item--active{% endif %} {% if not filter_event %}seg__item--disabled{% endif %}">
-              <span class="seg__icon">⬇</span> Результат (гірший)
+              <span class="seg__icon">⬇</span> {% trans "Результат (гірший)" %}
               <input type="radio" name="sort" value="result_worst" {% if sort == 'result_worst' %}checked{% endif %} {% if not filter_event %}disabled{% endif %}>
             </label>
           {% endwith %}
 
           <label class="seg__item {% if sort == 'created_desc' %}seg__item--active{% endif %}">
-            <span class="seg__icon">🆕</span> Додані — новіші
+            <span class="seg__icon">🆕</span> {% trans "Додані — новіші" %}
             <input type="radio" name="sort" value="created_desc" {% if sort == 'created_desc' %}checked{% endif %}>
           </label>
           <label class="seg__item {% if sort == 'created_asc' %}seg__item--active{% endif %}">
-            <span class="seg__icon">📅</span> Додані — старіші
+            <span class="seg__icon">📅</span> {% trans "Додані — старіші" %}
             <input type="radio" name="sort" value="created_asc" {% if sort == 'created_asc' %}checked{% endif %}>
           </label>
         </div>
 
-        {# підказка без дужок у if #}
         {% if not filter_event and sort == 'result_best' or not filter_event and sort == 'result_worst' %}
           <p class="mt-2 text-xs text-amber-600 dark:text-amber-400">
-            Щоб увімкнути сортування за результатом, спочатку оберіть дисципліну.
+            {% trans "Щоб увімкнути сортування за результатом, спочатку оберіть дисципліну." %}
           </p>
         {% endif %}
       </fieldset>
 
       <div class="flex md:justify-end gap-2">
-        <button type="submit" class="btn btn-primary btn-sm">Застосувати</button>
-        <a href="{% url 'category_detail' category.id %}" class="btn btn-sm">Скинути</a>
+        <button type="submit" class="btn btn-primary btn-sm">{% trans "Застосувати" %}</button>
+        <a href="{% url 'category_detail' category.id %}" class="btn btn-sm">{% trans "Скинути" %}</a>
       </div>
     </form>
   </article>
@@ -180,19 +182,21 @@
               <span class="inline-flex items-center rounded-full bg-gray-200 px-2.5 py-1 text-xs font-medium text-gray-800 dark:bg-white/10 dark:text-gray-200">
                 {{ video.get_event_type_display }}
               </span>
-              <span class="text-xs text-gray-500 dark:text-gray-400">Спроба № {{ video.attempt_number }}</span>
+              <span class="text-xs text-gray-500 dark:text-gray-400">
+                {% blocktrans with n=video.attempt_number %}Спроба № {{ n }}{% endblocktrans %}
+              </span>
             </div>
 
             <ul class="text-sm space-y-1">
               <li>
-                <span class="text-gray-500 dark:text-gray-400">🎯 Результат:</span>
+                <span class="text-gray-500 dark:text-gray-400">🎯 {% trans "Результат:" %}</span>
                 {{ video.result }}
                 <span class="ml-1 text-xs text-gray-500">
-                  {% if video.event_type == 'run' %}с{% else %}м{% endif %}
+                  {% if video.event_type == 'run' %}{% trans "с" %}{% else %}{% trans "м" %}{% endif %}
                 </span>
               </li>
               <li>
-                <span class="text-gray-500 dark:text-gray-400">⏱️ Час:</span>
+                <span class="text-gray-500 dark:text-gray-400">⏱️ {% trans "Час:" %}</span>
                 {{ video.time|default:"—" }}
               </li>
             </ul>
@@ -204,9 +208,9 @@
             </video>
             <div class="mt-3 flex gap-2">
               <a href="{% url 'annotate_video' video.id %}?mode=view&from=category&cat={{ category.id }}"
-                 class="btn btn-primary">Переглянути</a>
+                 class="btn btn-primary">{% trans "Переглянути" %}</a>
               <a href="{% url 'annotate_video' video.id %}?mode=edit&from=category&cat={{ category.id }}"
-                 class="btn">Анотувати</a>
+                 class="btn">{% trans "Анотувати" %}</a>
             </div>
           </div>
         </article>
@@ -218,23 +222,23 @@
         <div class="card-body flex items-center justify-center gap-2">
           {% with ev='event='|add:filter_event|urlencode so='sort='|add:sort|urlencode %}
             {% if videos.has_previous %}
-              <a class="btn btn-sm" href="?page=1&{{ ev }}&{{ so }}">« Перша</a>
-              <a class="btn btn-sm" href="?page={{ videos.previous_page_number }}&{{ ev }}&{{ so }}">‹ Назад</a>
+              <a class="btn btn-sm" href="?page=1&{{ ev }}&{{ so }}">« {% trans "Перша" %}</a>
+              <a class="btn btn-sm" href="?page={{ videos.previous_page_number }}&{{ ev }}&{{ so }}">‹ {% trans "Назад" %}</a>
             {% else %}
-              <span class="btn btn-sm opacity-50 pointer-events-none">« Перша</span>
-              <span class="btn btn-sm opacity-50 pointer-events-none">‹ Назад</span>
+              <span class="btn btn-sm opacity-50 pointer-events-none">« {% trans "Перша" %}</span>
+              <span class="btn btn-sm opacity-50 pointer-events-none">‹ {% trans "Назад" %}</span>
             {% endif %}
 
             <span class="px-3 py-1.5 rounded border border-gray-200 dark:border-white/10 bg-white/70 dark:bg-white/10">
-              Стор. <strong>{{ videos.number }}</strong> з {{ videos.paginator.num_pages }}
+              {% blocktrans with n=videos.number total=videos.paginator.num_pages %}Стор. <strong>{{ n }}</strong> з {{ total }}{% endblocktrans %}
             </span>
 
             {% if videos.has_next %}
-              <a class="btn btn-sm" href="?page={{ videos.next_page_number }}&{{ ev }}&{{ so }}">Вперед ›</a>
-              <a class="btn btn-sm" href="?page={{ videos.paginator.num_pages }}&{{ ev }}&{{ so }}">Остання »</a>
+              <a class="btn btn-sm" href="?page={{ videos.next_page_number }}&{{ ev }}&{{ so }}">{% trans "Вперед" %} ›</a>
+              <a class="btn btn-sm" href="?page={{ videos.paginator.num_pages }}&{{ ev }}&{{ so }}">{% trans "Остання" %} »</a>
             {% else %}
-              <span class="btn btn-sm opacity-50 pointer-events-none">Вперед ›</span>
-              <span class="btn btn-sm opacity-50 pointer-events-none">Остання »</span>
+              <span class="btn btn-sm opacity-50 pointer-events-none">{% trans "Вперед" %} ›</span>
+              <span class="btn btn-sm opacity-50 pointer-events-none">{% trans "Остання" %} »</span>
             {% endif %}
           {% endwith %}
         </div>
@@ -244,7 +248,7 @@
     <article class="card">
       <div class="card-body">
         <p class="text-gray-600 dark:text-gray-300 italic">
-          У цій категорії немає відео за обраними фільтрами.
+          {% trans "У цій категорії немає відео за обраними фільтрами." %}
         </p>
       </div>
     </article>

@@ -1,10 +1,12 @@
+{# training_manager/dashboard/templates/dashboard/login.html #}
 {% extends "dashboard/base.html" %}
+{% load i18n %}
 
-{% block title %}Вхід — Athletic Manager{% endblock %}
+{% block title %}{% trans "Вхід" %} — Athletic Manager{% endblock %}
 
 {% block content %}
   <h1 class="text-2xl md:text-3xl font-semibold tracking-tight mb-6 text-center">
-    Вхід до системи
+    {% trans "Вхід до системи" %}
   </h1>
 
   <article class="card max-w-md mx-auto">
@@ -23,7 +25,7 @@
       {# Поле email з повним контролем над розміткою і стилями #}
       <div class="space-y-1.5">
         <label for="{{ form.email.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-200">
-          Електронна пошта{% if form.email.field.required %}<span class="text-red-600">*</span>{% endif %}
+          {% trans "Електронна пошта" %}{% if form.email.field.required %}<span class="text-red-600">*</span>{% endif %}
         </label>
 
         <input
@@ -41,7 +43,9 @@
         {% if form.email.help_text %}
           <p class="text-xs text-gray-500 dark:text-gray-400">{{ form.email.help_text }}</p>
         {% else %}
-          <p class="text-xs text-gray-500 dark:text-gray-400">Ми надішлемо одноразовий код для входу.</p>
+          <p class="text-xs text-gray-500 dark:text-gray-400">
+            {% trans "Ми надішлемо одноразовий код для входу." %}
+          </p>
         {% endif %}
 
         {% if form.email.errors %}
@@ -55,11 +59,11 @@
 
       <div class="pt-2 space-y-3">
         <button type="submit" class="btn btn-primary w-full justify-center">
-          Отримати код
+          {% trans "Отримати код" %}
         </button>
 
         <a href="{% url 'index' %}" class="btn btn-ghost w-full justify-center">
-          Повернутися на головну
+          {% trans "Повернутися на головну" %}
         </a>
       </div>
     </form>
